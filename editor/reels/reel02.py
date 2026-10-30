@@ -15,6 +15,10 @@ FIXES = [
     ("Funil", 22.98, "funil"),
     ("agente", 40.90, "agende"),
     ("DM", 41.26, "demo"),
+    ("Quando", 28.50, "Quando o"),
+    ("registra", 28.94, "registro é"),
+    ("a", 29.38, ""),
+    ("a", 30.72, "uma"),
 ]
 
 KEYWORDS = ["manualmente", "registrar", "CRM", "estranho", "lembrar", "falhar", "capturar", "acontece", "Blip",
@@ -46,7 +50,7 @@ def build(m):
              deal="Cliente", deal_sub="Negócio", tag="Interessado", move_t=m(22.08),
              more=[("Tarefa criada", m(23.40)), ("Histórico salvo", m(23.72))]),
         dict(type="plain", layout="full", start=m(24.50)),
-        dict(type="stats", layout="split", start=m(31.76), title=("REGISTRANDO A CONSEQUÊNCIA", m(31.76)),
+        dict(type="stats", layout="split", start=m(31.76), title=("QUANDO O REGISTRO É CONSEQUÊNCIA", m(31.76)),
              rows=[("Dado completo", m(32.36)), ("Sem cobrança", m(32.98)),
                    ("Gestor deixa de ser fiscal", m(34.14))]),
         dict(type="plain", layout="full", start=m(36.42)),
