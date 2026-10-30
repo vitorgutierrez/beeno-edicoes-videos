@@ -40,7 +40,7 @@ python3 editor/build.py reel02 --src /caminho/Teleprompter-2026-06-10_15-56-43.m
 
 `--preview 1.5,8.0,20` gera só alguns quadros para conferência.
 
-- Roteiro/storyboard de cada reel: `editor/reels/reel0X.py` (textos, tempos, correções da transcrição, palavras-chave, banner)
+- Roteiro/storyboard de cada reel: `editor/reels/reel0X.py` (textos, tempos, correções da transcrição, palavras-chave)
 - Cenas de motion graphics: `editor/scenes.py`; primitivas visuais: `editor/mg.py`
 - Trilha ambiente original sintetizada (sem direitos de terceiros): `editor/music.py`
 - Transcrições com tempo por palavra: `transcripts/`
