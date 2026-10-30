@@ -213,10 +213,10 @@ def caption(groups, t, style):
     asc, desc = f.getmetrics()
     pw, ph = int(total(f) + 48), int(asc + desc + 20)
     if style == "light":
-        pill = rounded(pw, ph, 12, rgba(WHITE, 248))
+        pill = rounded(pw, ph, 12, rgba(WHITE))
         base_col, key_col = INK, GREEN_600
     else:
-        pill = rounded(pw, ph, 12, rgba(INK, 225), rgba(GREEN, 200), 2)
+        pill = rounded(pw, ph, 12, rgba(INK), rgba(GREEN, 200), 2)
         base_col, key_col = WHITE, GREEN
     d = ImageDraw.Draw(pill)
     x, space = 24, f.getlength(" ")

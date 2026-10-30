@@ -25,6 +25,9 @@ KEYWORDS = ["WhatsApp", "problema", "comercial", "proposta", "renovação", "nen
             "vendas", "diferentes", "tempo", "argumento", "CRM", "integrado", "tickets", "negócios", "contato",
             "lados", "prática", "plataforma", "departamentos", "deveria"]
 
+# punch-ins (zoom suave) nas frases de impacto, em tempo do bruto
+PUNCH = [5.20, 19.26, 20.82, 39.84, 41.32, 43.54]
+
 
 def build(m):
     return [
@@ -42,7 +45,7 @@ def build(m):
         dict(type="head", layout="full", start=m(18.60), nocap=True, size=72, items=[
             ("PRO", m(18.60), False), ("CLIENTE,", m(18.88), False), ("É", m(19.08), False),
             ("UMA", m(19.22), False), ("EMPRESA", m(19.26), True), ("SÓ.", m(19.52), True)]),
-        dict(type="plain", layout="full", start=m(20.16), zoom=1.1),
+        dict(type="plain", layout="full", start=m(20.16)),
         dict(type="dots", layout="split", start=m(22.24), t0=m(22.24), chips_y=260,
              labels=[("Atendimento", 300, 660, m(22.42)), ("Vendas", 800, 440, m(23.04))],
              chips=[("−", "TEMPO", RED, m(26.08)), ("−", "ARGUMENTO", RED, m(27.38)),

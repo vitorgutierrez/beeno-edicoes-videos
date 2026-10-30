@@ -20,6 +20,9 @@ KEYWORDS = ["manualmente", "registrar", "CRM", "estranho", "lembrar", "falhar", 
             "tag", "classifica", "Beeno", "funil", "existe", "histórico", "consequência", "completo", "cobrança",
             "fiscal", "Saiba", "Mais", "demo", "plataforma"]
 
+# punch-ins (zoom suave) nas frases de impacto, em tempo do bruto
+PUNCH = [3.28, 8.28, 15.48, 29.50, 30.56, 37.72]
+
 
 def build(m):
     return [
@@ -31,7 +34,7 @@ def build(m):
         dict(type="form", layout="split", start=m(5.48), t0=m(5.48), title="Novo registro",
              sub="Preencha todos os campos", fields=["Etapa do negócio", "Última conversa", "Próximo passo"],
              req="Obrigatório", req_t=[m(6.38), m(6.86), m(7.20)]),
-        dict(type="plain", layout="full", start=m(8.02), zoom=1.12),
+        dict(type="plain", layout="full", start=m(8.02)),
         dict(type="checklist", layout="split", start=m(10.28), t0=m(10.28), title="Depende de alguém lembrar",
              rows=[("Registrar a ligação", m(10.58), True), ("Atualizar a etapa", m(11.24), True),
                    ("Anotar a objeção", m(11.80), True), ("Agendar o follow-up", m(13.22), False)]),

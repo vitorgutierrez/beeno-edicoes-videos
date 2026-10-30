@@ -4,7 +4,7 @@
 2. Cortes secos nas pausas e aceleração 1.2x (como nos ADs da RVOPS) + correção de cor
 3. Composição quadro a quadro: split-screen com cortes secos, motion graphics
    sóbrios, títulos e legendas palavra a palavra
-4. Trilha ambiente com ducking sob a voz
+4. Trilha (Mixkit) com o 'drop' sincronizado no CTA, ducking sob a voz
 
 Uso:  python3 editor/build.py reel01 --src /caminho/bruto.mp4 [--preview 1.5,8,20]
 """
@@ -16,7 +16,7 @@ import subprocess
 import sys
 import time
 
-from PIL import Image
+from PIL import Image, ImageFilter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mg  # noqa: E402
@@ -118,9 +118,49 @@ class Timeline:
         self.sc = scenes
         for i, s in enumerate(scenes):
             s["end"] = scenes[i + 1]["start"] if i + 1 < len(scenes) else duration + 1
+        # transições: toda troca de cena. 'panel' = só o painel de cima muda (split -> split)
+        self.trans = [(b["start"], "panel" if a["layout"] == b["layout"] == "split" else "full")
+                      for a, b in zip(scenes, scenes[1:])]
 
     def at(self, t):
         return next((s for s in self.sc if s["start"] <= t < s["end"]), None)
+
+
+class Framing:
+    """Enquadramento do apresentador em tela cheia: alterna aberto/fechado a cada corte seco,
+    punch-in suave nas frases de impacto e push-in lento e contínuo em todo plano."""
+    CLOSE = 1.14
+    PUSH = 0.012  # zoom por segundo
+
+    def __init__(self, cuts, punches):
+        self.ev = [(0.0, "cut")] + sorted([(c, "cut") for c in cuts] + [(p, "punch") for p in punches])
+        self.lv, base = [], 1.0
+        for i, (_, kind) in enumerate(self.ev):
+            if kind == "cut":
+                base = self.CLOSE if (i and base == 1.0) else 1.0
+                self.lv.append(base)
+            else:  # punch sempre aproxima a partir do enquadramento atual
+                self.lv.append(min(1.32, self.lv[-1] * 1.13))
+
+    def __call__(self, t):
+        i = max(k for k, (te, _) in enumerate(self.ev) if te <= t)
+        t0, kind = self.ev[i]
+        z = self.lv[i]
+        if kind == "punch" and i > 0:
+            prev = self.lv[i - 1] * (1 + self.PUSH * (t0 - self.ev[i - 1][0]))
+            z = mg.lerp(prev, z, mg.ease_in_out((t - t0) / 0.3))
+        return z * (1 + self.PUSH * (t - t0))
+
+
+def zoom_blur(img, k):
+    """Transição de zoom com desfoque (k: 0..1, pico no ponto de corte)."""
+    w, h = img.size
+    s = 1 + 0.12 * k
+    big = img.resize((int(w * s), int(h * s)), Image.BILINEAR)
+    x, y = (big.width - w) // 2, (big.height - h) // 2
+    out = big.crop((x, y, x + w, y + h))
+    small = out.resize((w // 4, h // 4), Image.BILINEAR).filter(ImageFilter.GaussianBlur(3.2 * k))
+    return Image.blend(out, small.resize((w, h), Image.BILINEAR), min(1, 1.4 * k))
 
 
 def speaker(frame, area_h, zoom, face, frac):
@@ -133,19 +173,18 @@ def speaker(frame, area_h, zoom, face, frac):
 
 def make_frame(cfg, tl, groups, t, src):
     sc = tl.at(t)
+    framing = cfg._framing
     split = bool(sc and sc["layout"] == "split")
     canvas = Image.new("RGBA", (W, H), (0, 0, 0, 255))
     if split:
         panel = mg.panel_bg(src)
         SC.DRAW[sc["type"]](panel, t, sc)
         canvas.paste(panel, (0, 0))
-        canvas.paste(speaker(src, H - mg.PANEL_H, cfg.SPLIT_ZOOM, cfg.FACE, cfg.SPLIT_FRAC), (0, mg.PANEL_H))
+        z = cfg.SPLIT_ZOOM * (1 + Framing.PUSH * (t - sc["start"]))
+        canvas.paste(speaker(src, H - mg.PANEL_H, z, cfg.FACE, cfg.SPLIT_FRAC), (0, mg.PANEL_H))
         canvas.alpha_composite(mg.divider(), (0, mg.PANEL_H - 2))
     else:
-        if sc and "zoom" in sc:
-            z = sc["zoom"]
-        else:  # zoom alternado a cada corte seco para disfarçar o jump cut
-            z = 1.0 if sum(1 for c in cfg._cuts if c <= t) % 2 == 0 else 1.05
+        z = sc["zoom"] * (1 + Framing.PUSH * (t - sc["start"])) if sc and "zoom" in sc else framing(t)
         canvas.paste(speaker(src, H, z, cfg.FACE, cfg.FACE[1] / H), (0, 0))
         if sc and sc["type"] in ("head", "cta_full"):
             canvas.alpha_composite(mg.top_shade(640, 200))
@@ -156,7 +195,15 @@ def make_frame(cfg, tl, groups, t, src):
         pill = mg.caption(groups, t, "light" if split else "dark")
         if pill:
             mg.place(canvas, pill, W / 2, cy)
-    return canvas.convert("RGB")
+    out = canvas.convert("RGB")
+    for T, kind in tl.trans:
+        if abs(t - T) < 0.1:
+            k = 1 - abs(t - T) / 0.1
+            if kind == "full":
+                out = zoom_blur(out, k)
+            else:
+                out.paste(zoom_blur(out.crop((0, 0, W, mg.PANEL_H - 2)), k), (0, 0))
+    return out
 
 
 def render(cfg, base, out_path, tl, groups, mix):
@@ -193,14 +240,17 @@ def preview(cfg, base, out_dir, tl, groups, times):
         make_frame(cfg, tl, groups, t, src).save(os.path.join(out_dir, f"p_{t:06.2f}.jpg"), quality=88)
 
 
-def mix_audio(base, duration, out_wav, work):
+def mix_audio(base, duration, tl, out_wav, work):
     mus = os.path.join(work, "music.wav")
-    music.write_wav(mus, music.music(duration))
+    sfx = os.path.join(work, "sfx.wav")
+    cta = next(s["start"] for s in tl.sc if s["type"] == "cta_full")
+    music.music_segment(work, music.TRACK_DROP - cta, duration, mus)
+    music.whoosh_track(duration, [T for T, _ in tl.trans], sfx)
     fc = ("[0:a]highpass=f=80,afftdn=nf=-38,acompressor=threshold=-20dB:ratio=3:attack=5:release=90:makeup=2,"
           "loudnorm=I=-15:TP=-2:LRA=8,aresample=48000,asplit=2[v][key];"
-          "[1:a]volume=0.30[m];[m][key]sidechaincompress=threshold=0.03:ratio=4:attack=60:release=600[md];"
-          "[v][md]amix=inputs=2:normalize=0:duration=first,alimiter=limit=0.93[out]")
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", base, "-i", mus, "-filter_complex", fc,
+          "[1:a][key]sidechaincompress=threshold=0.05:ratio=3:attack=40:release=450[md];"
+          "[v][md][2:a]amix=inputs=3:normalize=0:duration=first,alimiter=limit=0.93[out]")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", base, "-i", mus, "-i", sfx, "-filter_complex", fc,
                     "-map", "[out]", "-ac", "2", "-ar", "48000", out_wav], check=True)
 
 
@@ -218,7 +268,7 @@ def main():
     words = load_words(cfg)
     segs = keep_segments(words)
     m = TimeMap(segs, cfg.SPEED)
-    cfg._cuts = m.cut_points()
+    cfg._framing = Framing(m.cut_points(), [m(p) for p in cfg.PUNCH])
     print(f"{args.reel}: {len(segs)} trechos, {m.duration:.2f}s finais")
 
     base = os.path.join(work, "base.mp4")
@@ -240,7 +290,7 @@ def main():
 
     out = os.path.join(ROOT, "output", cfg.OUT_NAME)
     mix = os.path.join(work, "mix.wav")
-    mix_audio(base, m.duration, mix, work)
+    mix_audio(base, m.duration, tl, mix, work)
     render(cfg, base, out, tl, groups, mix)
     print("  ->", out)
 

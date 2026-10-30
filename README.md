@@ -11,19 +11,22 @@ Reels do Beeno editados com a mesma linguagem dos ADs da RVOPS (ADS 05), com a i
 
 1080x1920, 30fps, H.264 + AAC, -14 LUFS (padrão Reels).
 
-## Conceito (v2, após feedback)
+## Conceito (v3, após feedback)
 
 Linguagem sóbria/documental dos ADs da RVOPS, sem "gamificação":
 
 - Sem faixa de público nem linha de progresso no topo
-- Cortes secos entre tela cheia e split-screen (sem cortina/slide)
-- Elementos entram só com fade + leve subida; sem pops, carimbos ou escala com rebote
+- Transição de zoom com desfoque em toda troca de cena (tela cheia <-> split e entre gráficos)
+- Edição dinâmica do apresentador: enquadramento aberto/fechado alternando a cada corte seco,
+  punch-in suave nas frases de impacto (`PUNCH` em cada reel) e push-in lento em todos os planos
+- Elementos gráficos entram com fade + leve subida; sem pops, carimbos ou escala com rebote
 - Painel superior com o próprio quadro desfocado e escurecido; linhas finas, celulares abstratos,
   partículas que convergem para a marca, chips discretos
-- Legenda palavra a palavra (pílula branca na divisória / pílula escura em tela cheia)
+- Legenda palavra a palavra em pílula sólida (branca na divisória / escura em tela cheia)
 - Títulos em caixa-alta revelados no ritmo da fala; CTA com seta para o botão do anúncio
 - Tratamento de cor mais sóbrio no apresentador
-- Trilha ambiente (pad sustentado, sem batida) com ducking sob a voz; sem efeitos sonoros
+- Trilha "Minimal Emotion" (Mixkit, licença gratuita para redes sociais e anúncios, sem atribuição),
+  posicionada para o "drop" cair no CTA, com ducking sob a voz; "ar" bem suave nas transições
 - Cortes secos nas pausas e velocidade 1.2x
 
 ## Identidade Beeno
@@ -42,5 +45,5 @@ python3 editor/build.py reel02 --src /caminho/Teleprompter-2026-06-10_15-56-43.m
 
 - Roteiro/storyboard de cada reel: `editor/reels/reel0X.py` (textos, tempos, correções da transcrição, palavras-chave)
 - Cenas de motion graphics: `editor/scenes.py`; primitivas visuais: `editor/mg.py`
-- Trilha ambiente original sintetizada (sem direitos de terceiros): `editor/music.py`
+- Trilha e efeito de transição: `editor/music.py` (a faixa é baixada do Mixkit na primeira execução)
 - Transcrições com tempo por palavra: `transcripts/`
