@@ -11,20 +11,24 @@ Reels do Beeno editados com a mesma linguagem dos ADs da RVOPS (ADS 05), com a i
 
 1080x1920, 30fps, H.264 + AAC, -14 LUFS (padrão Reels).
 
-## O que foi aplicado da referência RVOPS
+## Conceito (v2, após feedback)
 
-- Pílula fixa no topo com chamada de público (verde no lugar do laranja)
-- Linha de progresso com 3 pontos (capítulos do roteiro)
-- Split-screen: motion graphic em cima, apresentador embaixo, divisória verde
-- Legenda palavra a palavra com palavras-chave destacadas (pílula branca na divisória / pílula tinta em tela cheia)
-- Gancho com caixas empilhadas, carimbos ("SEGUNDA", "TERÇA", "DESORGANIZADA", "VAI FALHAR"), chips de impacto, títulos grandes revelados no ritmo da fala
-- Card de marca e CTA final com botão
-- Cortes secos nas pausas, zoom alternado nos cortes e velocidade 1.2x
-- Trilha + whoosh/pop/impacto com ducking sob a voz
+Linguagem sóbria/documental dos ADs da RVOPS, sem "gamificação":
+
+- Sem faixa de público nem linha de progresso no topo
+- Cortes secos entre tela cheia e split-screen (sem cortina/slide)
+- Elementos entram só com fade + leve subida; sem pops, carimbos ou escala com rebote
+- Painel superior com o próprio quadro desfocado e escurecido; linhas finas, celulares abstratos,
+  partículas que convergem para a marca, chips discretos
+- Legenda palavra a palavra (pílula branca na divisória / pílula escura em tela cheia)
+- Títulos em caixa-alta revelados no ritmo da fala; CTA com seta para o botão do anúncio
+- Tratamento de cor mais sóbrio no apresentador
+- Trilha ambiente (pad sustentado, sem batida) com ducking sob a voz; sem efeitos sonoros
+- Cortes secos nas pausas e velocidade 1.2x
 
 ## Identidade Beeno
 
-Verde `#00CD8A` / `#00A973`, tinta `#0A1C15`, fonte Poppins, fundos em gradiente tinta com grid e brilho verde (como o hero do site), logo oficial `beeno by skeps`.
+Verde `#00CD8A` (só como acento), tinta `#0A1C15`, fonte Poppins, logo oficial `beeno by skeps`.
 
 ## Como regerar
 
@@ -38,5 +42,5 @@ python3 editor/build.py reel02 --src /caminho/Teleprompter-2026-06-10_15-56-43.m
 
 - Roteiro/storyboard de cada reel: `editor/reels/reel0X.py` (textos, tempos, correções da transcrição, palavras-chave, banner)
 - Cenas de motion graphics: `editor/scenes.py`; primitivas visuais: `editor/mg.py`
-- Trilha original sintetizada (sem direitos de terceiros): `editor/music.py`
+- Trilha ambiente original sintetizada (sem direitos de terceiros): `editor/music.py`
 - Transcrições com tempo por palavra: `transcripts/`

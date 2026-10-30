@@ -1,8 +1,6 @@
-"""Trilha original sintetizada (sem direitos de terceiros) + efeitos sonoros.
-
-Trilha: pulso 'tech/corporate' leve em 104 BPM (Am - F - C - G) com pad,
-arpejo em colcheias, sub-grave, kick suave e hi-hat. Fica baixa e é
-'duckada' pela voz na mixagem."""
+"""Trilha ambiente original (sem direitos de terceiros), no espírito da trilha
+dos ADs da RVOPS: pad sustentado, sem batida, com uma nota aguda contínua,
+reverb longo e entrada/saída suaves. Fica baixa e é 'duckada' pela voz."""
 import wave
 
 import numpy as np
@@ -10,160 +8,76 @@ import numpy as np
 SR = 48000
 
 
-def _note(n):
+def _hz(n):
     return 440.0 * 2 ** ((n - 69) / 12)
 
 
-def _lp(x, a):
-    y = np.empty_like(x)
-    acc = 0.0
-    for i in range(len(x)):
-        acc += a * (x[i] - acc)
-        y[i] = acc
-    return y
-
-
-def _lp_fast(x, cutoff):
-    # filtro passa-baixa via FFT (rápido para sinais longos)
+def _lowpass(x, cutoff):
     X = np.fft.rfft(x)
     f = np.fft.rfftfreq(len(x), 1 / SR)
     X *= 1 / np.sqrt(1 + (f / cutoff) ** 4)
     return np.fft.irfft(X, len(x))
 
 
-def music(duration, bpm=104, seed=3):
+def _reverb(x, seconds=3.2, seed=1):
+    rng = np.random.default_rng(seed)
+    n = int(seconds * SR)
+    ir = rng.standard_normal(n) * np.exp(-np.arange(n) / SR * 6.5 / seconds)
+    ir = _lowpass(ir, 5000)
+    ir /= np.sqrt(np.sum(ir ** 2))
+    m = len(x) + n
+    y = np.fft.irfft(np.fft.rfft(x, m) * np.fft.rfft(ir, m), m)[: len(x)]
+    return y
+
+
+def _voice(freq, t, rng):
+    """Uma voz de pad: 3 osciladores levemente desafinados, harmônicos suaves."""
+    out = np.zeros_like(t)
+    for det in (-0.12, 0.0, 0.11):
+        f = freq * 2 ** (det / 12)
+        ph = rng.uniform(0, 2 * np.pi)
+        for h, a in ((1, 1.0), (2, 0.35), (3, 0.16), (4, 0.07)):
+            out += a * np.sin(2 * np.pi * f * h * t + ph * h)
+    return out
+
+
+def music(duration, seed=3):
     rng = np.random.default_rng(seed)
     n = int(duration * SR) + SR
     t = np.arange(n) / SR
-    beat = 60 / bpm
-    out = np.zeros(n)
-    chords = [(57, 60, 64, 69), (53, 57, 60, 65), (48, 55, 60, 64), (55, 59, 62, 67)]  # Am F C G
-    bar = beat * 4
-    # pad
+    # progressão lenta e neutra: Dmaj9 -> Bm7 -> Gmaj7 -> A(add9), ~6s cada, com crossfade
+    chords = [(50, 57, 61, 64, 69), (47, 54, 57, 62, 66), (43, 50, 54, 59, 62), (45, 52, 57, 59, 64)]
+    step, xf = 6.0, 2.0
     pad = np.zeros(n)
-    for b in range(int(duration / bar) + 2):
-        ch = chords[b % 4]
-        s, e = int(b * bar * SR), min(n, int((b + 1) * bar * SR) + int(0.3 * SR))
-        if s >= n:
-            break
-        tt = t[s:e] - b * bar
-        env = np.minimum(1, tt / 0.4) * np.minimum(1, np.maximum(0, (bar + 0.3 - tt) / 0.5))
-        sig = np.zeros(e - s)
-        for note in ch:
-            for det in (-0.08, 0.08):
-                fr = _note(note + det)
-                ph = 2 * np.pi * fr * tt
-                sig += (np.sin(ph) + 0.35 * np.sin(2 * ph) + 0.15 * np.sin(3 * ph))
-        pad[s:e] += sig * env
-    pad = _lp_fast(pad, 1800) * 0.035
-    # sidechain 'pump' no tempo
-    phase = (t % beat) / beat
-    pump = 0.45 + 0.55 * np.minimum(1, phase / 0.45)
-    out += pad * pump
-    # arpejo
-    eighth = beat / 2
-    arp = np.zeros(n)
-    pattern = [0, 2, 1, 3, 2, 1, 3, 2]
-    k = 0
-    while k * eighth < duration + 1:
-        b = int(k * eighth / bar)
-        ch = chords[b % 4]
-        note = ch[pattern[k % 8]] + 12
-        s = int(k * eighth * SR)
-        L = int(0.35 * SR)
-        e = min(n, s + L)
-        tt = np.arange(e - s) / SR
-        fr = _note(note)
-        sig = (np.sin(2 * np.pi * fr * tt) + 0.3 * np.sin(4 * np.pi * fr * tt)) * np.exp(-tt * 9)
-        arp[s:e] += sig * (0.9 if k % 2 == 0 else 0.6)
-        k += 1
-    out += _lp_fast(arp, 3500) * 0.05
-    # sub-grave (fundamental do acorde, semínimas)
-    k = 0
-    while k * beat < duration + 1:
-        b = int(k * beat / bar)
-        fr = _note(chords[b % 4][0] - 24)
-        s = int(k * beat * SR)
-        e = min(n, s + int(beat * SR))
-        tt = np.arange(e - s) / SR
-        out[s:e] += np.sin(2 * np.pi * fr * tt) * np.minimum(1, tt / 0.02) * np.exp(-tt * 3) * 0.12
-        k += 1
-    # kick + hat
-    k = 0
-    while k * beat < duration + 1:
-        s = int(k * beat * SR)
-        e = min(n, s + int(0.3 * SR))
-        tt = np.arange(e - s) / SR
-        f = 45 + 90 * np.exp(-tt * 30)
-        out[s:e] += np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-tt * 14) * 0.22
-        hs = int((k * beat + beat / 2) * SR)
-        he = min(n, hs + int(0.06 * SR))
-        if hs < n:
-            noise = rng.standard_normal(he - hs)
-            noise = noise - _lp(noise, 0.5)
-            out[hs:he] += noise * np.exp(-np.arange(he - hs) / SR * 60) * 0.03
-        k += 1
+    for i in range(int(duration / step) + 2):
+        s0 = i * step - xf / 2
+        env = np.clip((t - s0) / xf, 0, 1) * np.clip((s0 + step + xf - t) / xf, 0, 1)
+        env = np.sin(env * np.pi / 2) ** 2
+        idx = env > 0
+        if not idx.any():
+            continue
+        for note in chords[i % 4]:
+            pad[idx] += _voice(_hz(note), t[idx], rng) * env[idx] * (0.6 if note < 48 else 1.0)
+    pad = _lowpass(pad, 1400)
+    # respiração lenta de volume
+    pad *= 0.85 + 0.15 * np.sin(2 * np.pi * t / 9.0)
+    # nota aguda sustentada (o 'fio' que se ouve na trilha da RVOPS)
+    shimmer = np.sin(2 * np.pi * _hz(73) * t) * (0.5 + 0.5 * np.sin(2 * np.pi * t / 7.0 + 1)) * 0.9
+    shimmer += 0.25 * np.sin(2 * np.pi * _hz(81) * t)
+    sub = np.sin(2 * np.pi * _hz(38) * t) * 0.5
+    dry = pad * 0.08 + shimmer * 0.12 + sub * 0.10
+    out = 0.55 * dry + 0.9 * _reverb(dry)
     out = out[: int(duration * SR)]
-    # fade in/out
-    fi, fo = int(0.8 * SR), int(1.5 * SR)
-    out[:fi] *= np.linspace(0, 1, fi)
-    out[-fo:] *= np.linspace(1, 0, fo)
+    fi, fo = int(1.2 * SR), int(2.0 * SR)
+    out[:fi] *= np.linspace(0, 1, fi) ** 2
+    out[-fo:] *= np.linspace(1, 0, fo) ** 2
     return out / (np.max(np.abs(out)) + 1e-9) * 0.8
 
 
-def whoosh(rng, dur=0.45):
-    n = int(dur * SR)
-    tt = np.arange(n) / SR
-    noise = rng.standard_normal(n)
-    # varredura de filtro: passa-baixa com corte subindo e descendo
-    cut = 0.02 + 0.25 * np.sin(np.pi * tt / dur) ** 2
-    y = np.empty(n)
-    acc = 0.0
-    for i in range(n):
-        acc += cut[i] * (noise[i] - acc)
-        y[i] = acc
-    env = np.sin(np.pi * tt / dur) ** 1.5
-    return y * env * 1.6
-
-
-def pop_sfx(dur=0.09):
-    n = int(dur * SR)
-    tt = np.arange(n) / SR
-    f = 900 * np.exp(-tt * 25) + 380
-    return np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-tt * 45) * 0.55
-
-
-def hit_sfx(rng, dur=0.35):
-    n = int(dur * SR)
-    tt = np.arange(n) / SR
-    f = 60 + 120 * np.exp(-tt * 35)
-    body = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-tt * 12)
-    noise = rng.standard_normal(n) * np.exp(-tt * 40) * 0.3
-    return (body + noise) * 0.8
-
-
-def sfx_track(duration, events, seed=7):
-    rng = np.random.default_rng(seed)
-    out = np.zeros(int(duration * SR) + SR)
-    for t0, kind in events:
-        if kind == "whoosh":
-            s = whoosh(rng) * 0.35
-            t0 -= 0.2
-        elif kind == "hit":
-            s = hit_sfx(rng) * 0.55
-        else:
-            s = pop_sfx() * 0.35
-        i = int(max(0, t0) * SR)
-        out[i:i + len(s)] += s[: len(out) - i]
-    return out[: int(duration * SR)]
-
-
 def write_wav(path, x):
-    x = np.clip(x, -1, 1)
-    pcm = (x * 32767).astype(np.int16)
-    st = np.stack([pcm, pcm], axis=1)
+    pcm = (np.clip(x, -1, 1) * 32767).astype(np.int16)
     with wave.open(path, "wb") as w:
         w.setnchannels(2)
         w.setsampwidth(2)
         w.setframerate(SR)
-        w.writeframes(st.tobytes())
+        w.writeframes(np.stack([pcm, pcm], axis=1).tobytes())
