@@ -38,6 +38,8 @@ def plain(c, t, sc):
 
 def cta_full(c, t, sc):
     """CTA no estilo RVOPS: pílula com seta para baixo apontando para o botão do anúncio."""
+    if "items" in sc:
+        headline(c, t, sc["items"], sc.get("head_y", 250), sc.get("size", 76))
     txt, tm = sc["button"]
     f = font("ExtraBold", 44)
     ti = text_img(txt, f, INK)
@@ -155,17 +157,17 @@ class Particles:
             a = ease_out((t - t_in - q["delay"]) / 0.5)
             if a <= 0:
                 continue
-            x = q["x"] + 10 * math.sin(t * q["sp"] + q["ph"])
-            y = q["y"] + 8 * math.cos(t * q["sp"] * 0.8 + q["ph"])
+            x = q["x"] + 8 * math.sin(t * q["sp"] * 0.6 + q["ph"])
+            y = q["y"] + 6 * math.cos(t * q["sp"] * 0.5 + q["ph"])
             col, alpha = WHITE, 110
             if t_green is not None and q["green"] and t >= t_green + q["delay"] * 0.5:
                 col, alpha = GREEN, 230
             if t_conv is not None and t >= t_conv:
-                k = ease_in_out((t - t_conv - q["delay"] * 0.4) / 0.9)
+                k = ease_in_out((t - t_conv - q["delay"] * 0.4) / 1.4)
                 x, y = lerp(x, q["tx"], k), lerp(y, q["ty"], k)
                 col, alpha = GREEN, lerp(alpha, 230, k)
             if t_logo is not None and t >= t_logo:
-                alpha *= 1 - ease_out((t - t_logo) / 0.5)
+                alpha *= 1 - ease_out((t - t_logo) / 0.8)
             r = q["r"]
             d.ellipse([x - r, y - r, x + r, y + r], fill=rgba(col, alpha * a))
 
@@ -200,8 +202,10 @@ def dots(c, t, sc):
 
 def contact(c, t, sc):
     cw, ch = 860, 600
-    cy = PCY + 50
+    cy = PCY + 70
     a = appear(t, sc["t0"], 0.4)
+    if "logo_t" in sc:
+        fade_up(c, logo(220), PCX, 175, appear(t, sc["logo_t"], 0.4))
     card = rounded(cw, ch, 32, rgba(INK, 200), LINE, 2)
     d = ImageDraw.Draw(card)
     d.ellipse([40, 40, 124, 124], outline=rgba(GREEN, 220), width=3)
@@ -331,7 +335,7 @@ def kanban(c, t, sc):
     dd.rounded_rectangle([24, 120, 24 + tw + 50, 162], 21, fill=rgba(GREEN, 30), outline=rgba(GREEN, 230), width=2)
     dd.ellipse([38, 136, 48, 146], fill=rgba(GREEN))
     dd.text((58, 126), sc["tag"], font=f, fill=rgba(GREEN))
-    k = ease_in_out((t - sc["move_t"]) / 0.7) if t >= sc["move_t"] else 0
+    k = ease_in_out((t - sc["move_t"]) / 1.0) if t >= sc["move_t"] else 0
     place(c, deal, lerp(xs[0], xs[1], k), cy - 110)
     y = cy + 40
     for txt, tm in sc.get("more", []):

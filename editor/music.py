@@ -1,4 +1,4 @@
-"""Trilha e efeito de transição.
+"""Trilha e clique de transição.
 
 Trilha: "Minimal Emotion" (Mixkit, Stock Music Free License — uso liberado em
 posts de redes sociais e anúncios online, sem atribuição). O arquivo não fica
@@ -17,6 +17,7 @@ import numpy as np
 SR = 48000
 TRACK_URL = "https://assets.mixkit.co/music/180/180.mp3"
 TRACK_DROP = 90.70  # segundo da faixa onde entra a parte cheia
+CLICK_URL = "https://assets.mixkit.co/active_storage/sfx/1120/1120-preview.mp3"
 
 
 def track(work):
@@ -38,23 +39,21 @@ def music_segment(work, start, duration, out_wav):
                     "-ac", "2", out_wav], check=True)
 
 
-def whoosh_track(duration, times, out_wav, seed=7):
-    """'Ar' suave e curto nas transições (ruído filtrado, bem baixo)."""
-    rng = np.random.default_rng(seed)
+def click_track(work, duration, times, out_wav):
+    """Clique de mouse real (Mixkit 'Clear mouse clicks', Sound Effects Free License) nas transições."""
+    path = os.path.join(work, "..", "mixkit-1120-mouse-click.mp3")
+    if not os.path.exists(path):
+        req = urllib.request.Request(CLICK_URL, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req) as r, open(path, "wb") as f:
+            f.write(r.read())
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", "0.085", "-t", "0.15", "-i", path, "-ac", "1",
+                          "-ar", str(SR), "-f", "s16le", "-"], capture_output=True, check=True).stdout
+    click = np.frombuffer(raw, np.int16).astype(np.float32) / 32768
+    click = click / (np.abs(click).max() + 1e-9) * 0.30
     out = np.zeros(int(duration * SR) + SR)
-    n = int(0.32 * SR)
-    tt = np.arange(n) / SR
     for t0 in times:
-        noise = rng.standard_normal(n)
-        cut = 0.01 + 0.10 * np.sin(np.pi * tt / tt[-1]) ** 2
-        y = np.empty(n)
-        acc = 0.0
-        for i in range(n):
-            acc += cut[i] * (noise[i] - acc)
-            y[i] = acc
-        y *= np.sin(np.pi * tt / tt[-1]) ** 2 * 0.22
-        i0 = int(max(0, t0 - 0.16) * SR)
-        out[i0:i0 + n] += y[: len(out) - i0]
+        i0 = int(max(0, t0 - 0.02) * SR)
+        out[i0:i0 + len(click)] += click[: len(out) - i0]
     pcm = (np.clip(out[: int(duration * SR)], -1, 1) * 32767).astype(np.int16)
     with wave.open(out_wav, "wb") as w:
         w.setnchannels(2)

@@ -16,6 +16,8 @@ import subprocess
 import sys
 import time
 
+import numpy as np
+
 from PIL import Image, ImageFilter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -41,14 +43,41 @@ def load_words(cfg):
     return [w for w in words if w["w"]]
 
 
-def keep_segments(words, gap=0.3, pre=0.1, post=0.12, tail=0.55):
+def load_audio(src):
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", src, "-ac", "1", "-ar", "16000", "-f", "s16le", "-"],
+                         capture_output=True, check=True).stdout
+    return np.frombuffer(raw, np.int16).astype(np.float32) / 32768
+
+
+def keep_segments(words, audio, gap=0.4, pad=0.15, tail=1.5):
+    """Corta só pausas longas, mantendo respiro natural. As bordas de cada trecho são
+    ajustadas pela energia do áudio para nunca comer o começo/fim de uma palavra."""
+    sr, hop = 16000, 160  # janelas de 10 ms
+    env = np.sqrt(np.convolve(audio ** 2, np.ones(hop) / hop, "same"))[::hop]
+    floor = np.percentile(env, 10)
+    voiced = env > floor * 3.5
+
+    def back(t):  # recua até achar silêncio contínuo
+        i = int(t * 100)
+        while i > 0 and (voiced[i] or voiced[i - 1]) and t * 100 - i < 40:
+            i -= 1
+        return i / 100
+
+    def fwd(t):
+        i = int(t * 100)
+        while i < len(voiced) - 1 and (voiced[i] or voiced[i + 1]) and i - t * 100 < 40:
+            i += 1
+        return i / 100
+
     segs = []
-    s = max(0, words[0]["s"] - pre)
+    s = max(0, back(words[0]["s"]) - pad)
     for a, b in zip(words, words[1:]):
         if b["s"] - a["e"] > gap:
-            segs.append((s, a["e"] + post))
-            s = b["s"] - pre
-    segs.append((s, words[-1]["e"] + tail))
+            e, nxt = fwd(a["e"]) + pad, back(b["s"]) - pad
+            if nxt > e:
+                segs.append((s, e))
+                s = nxt
+    segs.append((s, min(len(audio) / sr, words[-1]["e"] + tail)))
     return segs
 
 
@@ -70,8 +99,6 @@ class TimeMap:
                 return (self.cum[i] + t - s) / self.speed
         return self.duration
 
-    def cut_points(self):
-        return [c / self.speed for c in self.cum[1:-1]]
 
 
 def norm(s):
@@ -118,49 +145,55 @@ class Timeline:
         self.sc = scenes
         for i, s in enumerate(scenes):
             s["end"] = scenes[i + 1]["start"] if i + 1 < len(scenes) else duration + 1
-        # transições: toda troca de cena. 'panel' = só o painel de cima muda (split -> split)
-        self.trans = [(b["start"], "panel" if a["layout"] == b["layout"] == "split" else "full")
-                      for a, b in zip(scenes, scenes[1:])]
+            s["prev"] = scenes[i - 1] if i else None
+        # 'layout': tela cheia <-> split (zoom leve + clique); 'panel': troca do gráfico no split
+        # (dissolve + clique); 'overlay': troca de texto em tela cheia (dissolve, sem som)
+        self.trans = []
+        for a, b in zip(scenes, scenes[1:]):
+            kind = "layout" if a["layout"] != b["layout"] else ("panel" if b["layout"] == "split" else "overlay")
+            self.trans.append((b["start"], kind))
+
+    def clicks(self):
+        return [T for T, k in self.trans if k != "overlay"]
 
     def at(self, t):
         return next((s for s in self.sc if s["start"] <= t < s["end"]), None)
 
 
 class Framing:
-    """Enquadramento do apresentador em tela cheia: alterna aberto/fechado a cada corte seco,
-    punch-in suave nas frases de impacto e push-in lento e contínuo em todo plano."""
-    CLOSE = 1.14
-    PUSH = 0.012  # zoom por segundo
+    """Enquadramento em tela cheia, discreto: push-in bem lento a partir do início de cada
+    bloco de tela cheia e, no máximo, um punch-in suave por bloco, que se mantém até o fim
+    do bloco (sem aproximar e voltar)."""
+    PUSH = 0.004   # zoom por segundo
+    PUNCH = 0.07
 
-    def __init__(self, cuts, punches):
-        self.ev = [(0.0, "cut")] + sorted([(c, "cut") for c in cuts] + [(p, "punch") for p in punches])
-        self.lv, base = [], 1.0
-        for i, (_, kind) in enumerate(self.ev):
-            if kind == "cut":
-                base = self.CLOSE if (i and base == 1.0) else 1.0
-                self.lv.append(base)
-            else:  # punch sempre aproxima a partir do enquadramento atual
-                self.lv.append(min(1.32, self.lv[-1] * 1.13))
+    def __init__(self, scenes, punches):
+        self.blocks = []
+        for sc in scenes:
+            if sc["layout"] == "full" and not (self.blocks and self.blocks[-1][1] == sc["start"]):
+                self.blocks.append([sc["start"], sc["end"]])
+            elif sc["layout"] == "full":
+                self.blocks[-1][1] = sc["end"]
+        self.punches = punches
 
     def __call__(self, t):
-        i = max(k for k, (te, _) in enumerate(self.ev) if te <= t)
-        t0, kind = self.ev[i]
-        z = self.lv[i]
-        if kind == "punch" and i > 0:
-            prev = self.lv[i - 1] * (1 + self.PUSH * (t0 - self.ev[i - 1][0]))
-            z = mg.lerp(prev, z, mg.ease_in_out((t - t0) / 0.3))
-        return z * (1 + self.PUSH * (t - t0))
+        b0, b1 = next(((a, b) for a, b in self.blocks if a <= t < b), (t, t))
+        z = 1 + self.PUSH * (t - b0)
+        p = next((p for p in self.punches if b0 <= p <= t), None)
+        if p is not None:
+            z += self.PUNCH * mg.ease_in_out((t - p) / 0.7)
+        return z
 
 
 def zoom_blur(img, k):
     """Transição de zoom com desfoque (k: 0..1, pico no ponto de corte)."""
     w, h = img.size
-    s = 1 + 0.12 * k
+    s = 1 + 0.03 * k
     big = img.resize((int(w * s), int(h * s)), Image.BILINEAR)
     x, y = (big.width - w) // 2, (big.height - h) // 2
     out = big.crop((x, y, x + w, y + h))
-    small = out.resize((w // 4, h // 4), Image.BILINEAR).filter(ImageFilter.GaussianBlur(3.2 * k))
-    return Image.blend(out, small.resize((w, h), Image.BILINEAR), min(1, 1.4 * k))
+    small = out.resize((w // 4, h // 4), Image.BILINEAR).filter(ImageFilter.GaussianBlur(2.0 * k))
+    return Image.blend(out, small.resize((w, h), Image.BILINEAR), 0.85 * k)
 
 
 def speaker(frame, area_h, zoom, face, frac):
@@ -171,38 +204,52 @@ def speaker(frame, area_h, zoom, face, frac):
     return frame.resize((W, int(area_h)), Image.BILINEAR, box=(x0, y0, x0 + ww, y0 + wh))
 
 
+DISSOLVE = 0.35
+
+
 def make_frame(cfg, tl, groups, t, src):
     sc = tl.at(t)
-    framing = cfg._framing
     split = bool(sc and sc["layout"] == "split")
+    prev = sc["prev"] if sc and t - sc["start"] < DISSOLVE else None
+    fade = mg.ease_in_out((t - sc["start"]) / DISSOLVE) if prev else 1.0
     canvas = Image.new("RGBA", (W, H), (0, 0, 0, 255))
     if split:
         panel = mg.panel_bg(src)
-        SC.DRAW[sc["type"]](panel, t, sc)
+        if prev and prev["layout"] == "split":  # dissolve entre gráficos
+            old = panel.copy()
+            SC.DRAW[prev["type"]](old, t, prev)
+            SC.DRAW[sc["type"]](panel, t, sc)
+            panel = Image.blend(old, panel, fade)
+        else:
+            SC.DRAW[sc["type"]](panel, t, sc)
         canvas.paste(panel, (0, 0))
         z = cfg.SPLIT_ZOOM * (1 + Framing.PUSH * (t - sc["start"]))
         canvas.paste(speaker(src, H - mg.PANEL_H, z, cfg.FACE, cfg.SPLIT_FRAC), (0, mg.PANEL_H))
         canvas.alpha_composite(mg.divider(), (0, mg.PANEL_H - 2))
     else:
-        z = sc["zoom"] * (1 + Framing.PUSH * (t - sc["start"])) if sc and "zoom" in sc else framing(t)
+        z = cfg._framing(t)
         canvas.paste(speaker(src, H, z, cfg.FACE, cfg.FACE[1] / H), (0, 0))
-        if sc and sc["type"] in ("head", "cta_full"):
-            canvas.alpha_composite(mg.top_shade(640, 200))
+        canvas.alpha_composite(mg.top_shade(640, 170))
+        if prev and prev["layout"] == "full":  # dissolve entre textos
+            old = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+            SC.DRAW[prev["type"]](old, t, prev)
+            mg.place(canvas, old, W / 2, H / 2, 1 - fade)
         if sc:
-            SC.DRAW[sc["type"]](canvas, t, sc)
-    if not (sc and sc.get("nocap")):
+            new = Image.new("RGBA", (W, H), (0, 0, 0, 0)) if prev else canvas
+            SC.DRAW[sc["type"]](new, t, sc)
+            if prev:
+                mg.place(canvas, new, W / 2, H / 2, fade if prev["layout"] == "full" else 1)
+    hide_cap = sc and (sc.get("nocap") or t < sc.get("cap_from", 0) or (prev and prev.get("nocap")
+                                                                         and prev["layout"] == "full"))
+    if not hide_cap:
         cy = mg.PANEL_H if split else cfg.CAP_Y
         pill = mg.caption(groups, t, "light" if split else "dark")
         if pill:
             mg.place(canvas, pill, W / 2, cy)
     out = canvas.convert("RGB")
     for T, kind in tl.trans:
-        if abs(t - T) < 0.1:
-            k = 1 - abs(t - T) / 0.1
-            if kind == "full":
-                out = zoom_blur(out, k)
-            else:
-                out.paste(zoom_blur(out.crop((0, 0, W, mg.PANEL_H - 2)), k), (0, 0))
+        if kind == "layout" and abs(t - T) < 0.08:
+            out = zoom_blur(out, 1 - abs(t - T) / 0.08)
     return out
 
 
@@ -245,7 +292,7 @@ def mix_audio(base, duration, tl, out_wav, work):
     sfx = os.path.join(work, "sfx.wav")
     cta = next(s["start"] for s in tl.sc if s["type"] == "cta_full")
     music.music_segment(work, music.TRACK_DROP - cta, duration, mus)
-    music.whoosh_track(duration, [T for T, _ in tl.trans], sfx)
+    music.click_track(work, duration, tl.clicks(), sfx)
     fc = ("[0:a]highpass=f=80,afftdn=nf=-38,acompressor=threshold=-20dB:ratio=3:attack=5:release=90:makeup=2,"
           "loudnorm=I=-15:TP=-2:LRA=8,aresample=48000,asplit=2[v][key];"
           "[1:a][key]sidechaincompress=threshold=0.05:ratio=3:attack=40:release=450[md];"
@@ -266,9 +313,8 @@ def main():
     os.makedirs(work, exist_ok=True)
 
     words = load_words(cfg)
-    segs = keep_segments(words)
+    segs = keep_segments(words, load_audio(args.src))
     m = TimeMap(segs, cfg.SPEED)
-    cfg._framing = Framing(m.cut_points(), [m(p) for p in cfg.PUNCH])
     print(f"{args.reel}: {len(segs)} trechos, {m.duration:.2f}s finais")
 
     base = os.path.join(work, "base.mp4")
@@ -280,6 +326,7 @@ def main():
         open(sigf, "w").write(sig)
 
     tl = Timeline(cfg.build(m), m.duration)
+    cfg._framing = Framing(tl.sc, [m(p) for p in cfg.PUNCH])
     groups = caption_groups(words, m, {norm(k) for k in cfg.KEYWORDS})
 
     if args.preview:
@@ -289,6 +336,7 @@ def main():
         return
 
     out = os.path.join(ROOT, "output", cfg.OUT_NAME)
+    os.makedirs(os.path.dirname(out), exist_ok=True)
     mix = os.path.join(work, "mix.wav")
     mix_audio(base, m.duration, tl, mix, work)
     render(cfg, base, out, tl, groups, mix)

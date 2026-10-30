@@ -53,8 +53,11 @@ def lerp(a, b, x):
     return a + (b - a) * x
 
 
+PACE = 1.6  # multiplica a duração de todas as entradas (animações mais calmas)
+
+
 def appear(t, t0, dur=0.35):
-    return clamp01((t - t0) / dur)
+    return clamp01((t - t0) / (dur * PACE))
 
 
 # ---------------------------------------------------------------- composição
