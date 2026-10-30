@@ -12,8 +12,8 @@ Reels do Beeno editados com a mesma linguagem dos ADs da RVOPS (ADS 05), com a i
 1080x1920, 30fps, H.264 + AAC, -14 LUFS (padrão Reels).
 
 Capa do reel 01: `output/BEENO-REEL01-capa.png` (1080x1920, conteúdo dentro do recorte 3:4 do grid),
-gerada por `python3 editor/cover.py`. Foto: Liza Summer / Pexels (licença Pexels: uso comercial livre,
-sem atribuição obrigatória), em `assets/stock/`.
+no template das capas do perfil (fundo escuro com brilho verde, traço verde, título leve + negrito,
+"b" da marca como marca-d'água). Gerada por `python3 editor/cover.py`.
 
 ## Conceito (v5, após feedback)
 
