@@ -5,6 +5,8 @@ from mg import RED
 TRANSCRIPT = "transcripts/reel01_raw_whisper.json"
 OUT_NAME = "BEENO-REEL01-atendimento-vendas.mp4"
 SPEED = 1.1
+END_MAX = 46.95         # depois disso ele leva a mão até a câmera para desligar
+MUSIC = ("dark-motions-miraj.mp3", 14.35)  # (arquivo em assets/music, segundo em que a batida entra)
 FACE = (560, 810)       # centro do rosto no bruto (px)
 SPLIT_ZOOM = 1.0
 SPLIT_FRAC = 0.42       # posição do rosto na metade de baixo do split
@@ -14,10 +16,7 @@ CAP_Y = 1480            # legenda no modo tela cheia
 FIXES = [
     ("chamar", 8.38, "chamado"),
     ("whatsapp", 8.70, "WhatsApp"),
-    ("Para", 15.74, "Pra"),
-    ("empresas", 15.94, "empresa"),
-    ("para", 18.60, "pro"),
-    ("o", 18.76, ""),
+    ("empresas", 15.94, "a empresa"),
     ("time,", 26.30, "tempo,"),
 ]
 
@@ -25,14 +24,11 @@ KEYWORDS = ["WhatsApp", "problema", "comercial", "proposta", "renovação", "nen
             "vendas", "diferentes", "tempo", "argumento", "CRM", "integrado", "tickets", "negócios", "contato",
             "lados", "prática", "plataforma", "departamentos", "deveria"]
 
-# no máximo um punch-in suave por bloco de tela cheia (tempo do bruto)
-PUNCH = [5.20, 20.82, 42.88]
-
 
 def build(m):
     return [
         dict(type="hook", layout="full", start=0, nocap=True, y=1250, boxes=[
-            ("ISSO AQUI JÁ ACONTECEU", "green", m(3.32)),
+            ("ISSO AQUI JÁ ACONTECEU", "green", -1),
             ("NA SUA OPERAÇÃO.", "white", m(5.20)),
         ]),
         dict(type="phones", layout="split", start=m(6.68), split_t=m(14.24), phones=[
@@ -43,7 +39,7 @@ def build(m):
                  items=[("Proposta de renovação", "doc", m(12.18)), ("Enviada", "status", m(12.76))]),
         ]),
         dict(type="head", layout="full", start=m(18.60), cap_from=m(20.16), size=72, items=[
-            ("PRO", m(18.60), False), ("CLIENTE,", m(18.88), False), ("É", m(19.08), False),
+            ("PARA", m(18.60), False), ("O", m(18.76), False), ("CLIENTE,", m(18.88), False), ("É", m(19.08), False),
             ("UMA", m(19.22), False), ("EMPRESA", m(19.26), True), ("SÓ.", m(19.52), True)]),
         dict(type="dots", layout="split", start=m(22.24), t0=m(22.24), chips_y=260,
              labels=[("Atendimento", 300, 660, m(22.42)), ("Vendas", 800, 440, m(23.04))],

@@ -1,11 +1,8 @@
 """Trilha e clique de transição.
 
-Trilha: "Minimal Emotion" (Mixkit, Stock Music Free License — uso liberado em
-posts de redes sociais e anúncios online, sem atribuição). O arquivo não fica
-no repositório: é baixado do Mixkit na primeira execução.
-
-A trilha é posicionada para que o 'drop' (90.7s da faixa) caia exatamente no
-início do CTA de cada reel.
+Trilhas: arquivos enviados pelo cliente, em assets/music/ (fora do git). A faixa é
+posicionada para que a batida cheia entre quando o gancho termina.
+Clique: Mixkit 'Clear mouse clicks' (Sound Effects Free License), baixado na 1a execução.
 """
 import os
 import subprocess
@@ -15,27 +12,16 @@ import wave
 import numpy as np
 
 SR = 48000
-TRACK_URL = "https://assets.mixkit.co/music/180/180.mp3"
-TRACK_DROP = 90.70  # segundo da faixa onde entra a parte cheia
 CLICK_URL = "https://assets.mixkit.co/active_storage/sfx/1120/1120-preview.mp3"
 
 
-def track(work):
-    path = os.path.join(work, "..", "mixkit-180-minimal-emotion.mp3")
-    if not os.path.exists(path):
-        req = urllib.request.Request(TRACK_URL, headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req) as r, open(path, "wb") as f:
-            f.write(r.read())
-    return path
-
-
-def music_segment(work, start, duration, out_wav):
-    """Recorta a faixa a partir de `start`, com fade in/out, normalizada para -26 LUFS."""
-    fade_out = 1.4
+def music_segment(path, start, duration, out_wav):
+    """Recorta a faixa a partir de `start`, com fade in/out, normalizada para -24 LUFS."""
+    fade_out = 1.0
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{max(0, start):.3f}", "-t", f"{duration:.3f}",
-                    "-i", track(work), "-af",
-                    f"afade=t=in:d=0.6,afade=t=out:st={duration - fade_out:.3f}:d={fade_out},"
-                    "loudnorm=I=-26:TP=-6:LRA=11,aresample=48000",
+                    "-i", path, "-af",
+                    f"afade=t=in:d=0.4,afade=t=out:st={duration - fade_out:.3f}:d={fade_out},"
+                    "highpass=f=35,loudnorm=I=-24:TP=-6:LRA=11,aresample=48000",
                     "-ac", "2", out_wav], check=True)
 
 

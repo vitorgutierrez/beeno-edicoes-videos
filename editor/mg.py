@@ -62,23 +62,21 @@ def appear(t, t0, dur=0.35):
 
 # ---------------------------------------------------------------- composição
 def place(canvas, img, cx, cy, alpha=1.0, scale=1.0):
-    """Cola img (RGBA) centrado em (cx, cy)."""
-    if alpha <= 0.01:
+    """Cola img (RGBA) centrado em (cx, cy). Sem semitransparência: `alpha` só liga/desliga
+    (texto nunca aparece 'vazado')."""
+    if alpha < 0.5:
         return
     if abs(scale - 1) > 1e-3:
         img = img.resize((max(1, int(img.width * scale)), max(1, int(img.height * scale))), Image.BILINEAR)
-    if alpha < 0.999:
-        img = img.copy()
-        img.putalpha(img.getchannel("A").point(lambda v: int(v * alpha)))
     x, y = int(round(cx - img.width / 2)), int(round(cy - img.height / 2))
     canvas.alpha_composite(img, (max(0, x), max(0, y)), (max(0, -x), max(0, -y)))
 
 
 def fade_up(canvas, img, cx, cy, p, rise=14):
-    """Entrada padrão: fade + leve subida. Sem escala, sem overshoot."""
+    """Entrada padrão: o elemento aparece já sólido e só sobe levemente até a posição."""
     if p <= 0:
         return
-    place(canvas, img, cx, cy + (1 - ease_out(p)) * rise, ease_out(p))
+    place(canvas, img, cx, cy + (1 - ease_out(p)) * rise)
 
 
 def text_img(txt, f, color=WHITE, shadow=False, tracking=0):
@@ -198,7 +196,7 @@ def divider():
 
 # ---------------------------------------------------------------- legendas
 def caption(groups, t, style):
-    """Legenda por grupo de palavras; palavra já falada = opaca, próximas = esmaecidas.
+    """Legenda por grupo de palavras, sempre sólida (sem revelar palavra a palavra).
     'light' = pílula branca na divisória; 'dark' = pílula tinta com borda verde."""
     g = next((grp for grp in groups if grp["t0"] <= t < grp["t1"]), None)
     if g is None:
@@ -225,7 +223,7 @@ def caption(groups, t, style):
     x, space = 24, f.getlength(" ")
     for w in words:
         col = key_col if w["key"] else base_col
-        d.text((x, 8), w["text"], font=f, fill=rgba(col, 255 if t >= w["t"] - 0.03 else 75))
+        d.text((x, 8), w["text"], font=f, fill=rgba(col))
         x += f.getlength(w["text"]) + space
     return pill
 
@@ -246,7 +244,7 @@ def wrap(items, f, maxw):
 
 
 def headline(canvas, t, items, y_top, size=80, maxw=940):
-    """Título em caixa-alta revelado palavra a palavra (fade), como no fechamento da RVOPS."""
+    """Título em caixa-alta revelado palavra a palavra (cada palavra entra sólida)."""
     f = font("ExtraBold", size)
     asc, _ = f.getmetrics()
     lh = int(size * 1.12)

@@ -54,7 +54,7 @@ def cta_full(c, t, sc):
 
 # ------------------------------------------------------------------ peças do painel
 def _phone(w, h, header, sub, when=None):
-    ph = rounded(w, h, 40, (255, 255, 255, 10), LINE, 2)
+    ph = rounded(w, h, 40, (18, 34, 28, 255), LINE, 2)
     d = ImageDraw.Draw(ph)
     d.rounded_rectangle([w / 2 - 40, 16, w / 2 + 40, 26], 5, fill=(255, 255, 255, 40))
     d.ellipse([28, 52, 84, 108], outline=(255, 255, 255, 90), width=2)
@@ -83,7 +83,7 @@ def _bubble(txt, maxw, side="in", size=27):
     asc, desc = f.getmetrics()
     lh = asc + desc + 2
     bw = int(max(f.getlength(l) for l in lines) + 40)
-    fill = (255, 255, 255, 30) if side == "in" else rgba(GREEN, 225)
+    fill = (44, 62, 54, 255) if side == "in" else rgba(GREEN)
     col = WHITE if side == "in" else INK
     b = rounded(bw, lh * len(lines) + 24, 20, fill)
     d = ImageDraw.Draw(b)
@@ -109,7 +109,7 @@ def phones(c, t, sc):
         dd = ImageDraw.Draw(c)
         for k, ww in enumerate((230, 170, 260)):
             dd.rounded_rectangle([cx - pw / 2 + 28, top + 160 + k * 34, cx - pw / 2 + 28 + ww, top + 176 + k * 34],
-                                 8, fill=(255, 255, 255, 18))
+                                 8, fill=(40, 56, 49, 255))
         y = top + 290
         for txt, kind, tm in side["items"]:
             if kind == "msg":
@@ -117,7 +117,7 @@ def phones(c, t, sc):
                 fade_up(c, b, cx - pw / 2 + 24 + b.width / 2, y + b.height / 2, appear(t, tm, 0.3))
                 y += b.height + 16
             elif kind == "doc":
-                doc = rounded(pw - 48, 84, 16, (255, 255, 255, 18))
+                doc = rounded(pw - 48, 84, 16, (36, 52, 45, 255))
                 d = ImageDraw.Draw(doc)
                 d.rounded_rectangle([16, 16, 52, 68], 6, outline=rgba(WHITE, 160), width=2)
                 d.line([(24, 32), (44, 32)], fill=rgba(WHITE, 120), width=2)
@@ -186,14 +186,14 @@ def dots(c, t, sc):
     for big, small, accent, tm in sc.get("chips", []):
         bi = text_img(big, font("ExtraBold", 54), accent)
         si = text_img(small, font("Bold", 30), WHITE)
-        ch = rounded(bi.width + si.width + 52, 82, 41, rgba(INK, 215), LINE, 2)
+        ch = rounded(bi.width + si.width + 52, 82, 41, rgba(INK), LINE, 2)
         ch.alpha_composite(bi, (22, (82 - bi.height) // 2 + 2))
         ch.alpha_composite(si, (22 + bi.width + 8, (82 - si.height) // 2 + 4))
         fade_up(c, ch, 70 + ch.width / 2, y, appear(t, tm, 0.3), rise=0)
         y += 98
     if "logo_t" in sc:
         a = ease_out(appear(t, sc["logo_t"], 0.6))
-        place(c, rounded(560, 230, 28, rgba(INK, 200), rgba(GREEN, 120), 2), PCX, PCY + 40, a)
+        place(c, rounded(560, 230, 28, rgba(INK), rgba(GREEN, 120), 2), PCX, PCY + 40, a)
         place(c, logo(400), PCX, PCY + 40, a, lerp(0.96, 1, a))
         if "tag" in sc:
             txt, tm = sc["tag"]
@@ -206,7 +206,7 @@ def contact(c, t, sc):
     a = appear(t, sc["t0"], 0.4)
     if "logo_t" in sc:
         fade_up(c, logo(220), PCX, 175, appear(t, sc["logo_t"], 0.4))
-    card = rounded(cw, ch, 32, rgba(INK, 200), LINE, 2)
+    card = rounded(cw, ch, 32, rgba(INK), LINE, 2)
     d = ImageDraw.Draw(card)
     d.ellipse([40, 40, 124, 124], outline=rgba(GREEN, 220), width=3)
     f0 = font("Bold", 40)
@@ -238,7 +238,7 @@ def form(c, t, sc):
     cw, ch = 820, 600
     cy = PCY + 40
     a = appear(t, sc["t0"], 0.4)
-    card = rounded(cw, ch, 32, rgba(INK, 200), LINE, 2)
+    card = rounded(cw, ch, 32, rgba(INK), LINE, 2)
     d = ImageDraw.Draw(card)
     d.text((44, 36), sc["title"], font=font("Bold", 38), fill=rgba(WHITE))
     d.text((44, 88), sc["sub"], font=font("Regular", 25), fill=rgba(MUTED))
@@ -263,7 +263,7 @@ def checklist(c, t, sc):
     cw, ch = 820, 600
     cy = PCY + 40
     a = appear(t, sc["t0"], 0.4)
-    card = rounded(cw, ch, 32, rgba(INK, 200), LINE, 2)
+    card = rounded(cw, ch, 32, rgba(INK), LINE, 2)
     ImageDraw.Draw(card).text((44, 36), sc["title"], font=font("Bold", 38), fill=rgba(WHITE))
     fade_up(c, card, PCX, cy, a)
     if a < 1:
@@ -278,7 +278,6 @@ def checklist(c, t, sc):
         rd.text((70, 32), txt, font=font("Medium", 33), fill=rgba(RED) if failed else rgba(WHITE, 230))
         if t >= tm:
             ic = check_icon(44, GREEN, 5) if ok else x_icon(44, RED, 4)
-            ic.putalpha(ic.getchannel("A").point(lambda v: int(v * ease_out((t - tm) / 0.25))))
             row.alpha_composite(ic, (0, 33))
         if txt != sc["rows"][-1][0]:
             _hdr_line(rd, 0, cw - 88, 109)
@@ -304,7 +303,7 @@ def chat(c, t, sc):
     if "tag" in sc:
         txt, tm = sc["tag"]
         ti = text_img(txt, font("SemiBold", 26), GREEN)
-        tg = rounded(ti.width + 64, 52, 26, rgba(GREEN, 30), rgba(GREEN, 230), 2)
+        tg = rounded(ti.width + 64, 52, 26, (12, 58, 42, 255), rgba(GREEN), 2)
         ImageDraw.Draw(tg).ellipse([20, 20, 32, 32], fill=rgba(GREEN))
         tg.alpha_composite(ti, (40, (52 - ti.height) // 2 - 1))
         fade_up(c, tg, PCX + pw / 2 - 30 - tg.width / 2, top + 80, appear(t, tm, 0.3), rise=6)
@@ -316,23 +315,23 @@ def kanban(c, t, sc):
     a = appear(t, sc["t0"], 0.4)
     fade_up(c, logo(200), PCX, 215, a)
     for i, name in enumerate(sc["cols"]):
-        col = rounded(300, 560, 24, rgba(INK, 170), LINE, 2)
+        col = rounded(300, 560, 24, rgba(INK), LINE, 2)
         d = ImageDraw.Draw(col)
         ti = text_img(name, font("SemiBold", 30), WHITE)
         col.alpha_composite(ti, ((300 - ti.width) // 2, 22))
         _hdr_line(d, 24, 276, 84)
         for k in range(2):
-            d.rounded_rectangle([24, 330 + k * 84, 276, 330 + k * 84 + 64], 14, fill=(255, 255, 255, 10))
+            d.rounded_rectangle([24, 330 + k * 84, 276, 330 + k * 84 + 64], 14, fill=(26, 42, 36, 255))
         fade_up(c, col, xs[i], cy, a)
     if a < 1:
         return
-    deal = rounded(256, 190, 18, rgba(INK, 245), rgba(GREEN, 200), 2)
+    deal = rounded(256, 190, 18, rgba(INK), rgba(GREEN, 200), 2)
     dd = ImageDraw.Draw(deal)
     dd.text((24, 20), sc["deal"], font=font("Bold", 32), fill=rgba(WHITE))
     dd.text((24, 64), sc["deal_sub"], font=font("Regular", 23), fill=rgba(MUTED))
     f = font("SemiBold", 22)
     tw = f.getlength(sc["tag"])
-    dd.rounded_rectangle([24, 120, 24 + tw + 50, 162], 21, fill=rgba(GREEN, 30), outline=rgba(GREEN, 230), width=2)
+    dd.rounded_rectangle([24, 120, 24 + tw + 50, 162], 21, fill=(12, 58, 42, 255), outline=rgba(GREEN), width=2)
     dd.ellipse([38, 136, 48, 146], fill=rgba(GREEN))
     dd.text((58, 126), sc["tag"], font=f, fill=rgba(GREEN))
     k = ease_in_out((t - sc["move_t"]) / 1.0) if t >= sc["move_t"] else 0
@@ -353,7 +352,7 @@ def stats(c, t, sc):
     y = sc.get("y0", 370)
     for txt, tm in sc["rows"]:
         ti = text_img(txt, font("Bold", 44), WHITE)
-        row = rounded(860, 128, 24, rgba(INK, 190), LINE, 2)
+        row = rounded(860, 128, 24, rgba(INK), LINE, 2)
         row.alpha_composite(check_icon(60, GREEN, 6), (40, 34))
         row.alpha_composite(ti, (128, (128 - ti.height) // 2))
         fade_up(c, row, PCX, y, appear(t, tm, 0.35))

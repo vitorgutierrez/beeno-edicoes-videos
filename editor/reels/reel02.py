@@ -4,6 +4,7 @@ Bruto: Drive 'Vídeos gravados' / Teleprompter-2026-06-10_15-56-43.mp4"""
 TRANSCRIPT = "transcripts/reel02_raw_whisper.json"
 OUT_NAME = "BEENO-REEL02-registro-automatico.mp4"
 SPEED = 1.1
+MUSIC = ("tycoon-sever.mp3", 15.35)  # (arquivo em assets/music, segundo em que a batida entra)
 FACE = (580, 980)
 SPLIT_ZOOM = 1.0
 SPLIT_FRAC = 0.42
@@ -20,14 +21,11 @@ KEYWORDS = ["manualmente", "registrar", "CRM", "estranho", "lembrar", "falhar", 
             "tag", "classifica", "Beeno", "funil", "existe", "histórico", "consequência", "completo", "cobrança",
             "fiscal", "Saiba", "Mais", "demo", "plataforma"]
 
-# no máximo um punch-in suave por bloco de tela cheia (tempo do bruto)
-PUNCH = [5.48, 15.48, 28.50, 37.72]
-
 
 def build(m):
     return [
         dict(type="hook", layout="full", start=0, nocap=True, y=1420, size=48, boxes=[
-            ("O MELHOR REGISTRO", "green", m(1.36)),
+            ("O MELHOR REGISTRO", "green", -1),
             ("É AQUELE QUE NINGUÉM", "white", m(2.56)),
             ("PRECISA FAZER MANUALMENTE.", "white", m(3.28)),
         ]),
