@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 *.mix.wav
 assets/music/
+videos/*/frames/
+videos/*/render/

@@ -66,3 +66,15 @@ node posts/render.js posts/carrossel-01-produto   # gera png/slide-01.png ... e 
 
 Tom dos posts e legendas: sóbrio, de gestor para gestor (o público inclui sócios e diretores). Sem gíria,
 sem piada, sem emojis em excesso; o problema é sempre o processo, nunca a pessoa.
+
+## Reel "Torre de controle" (`videos/torre-de-controle/`)
+
+Cenas cinematográficas geradas no Seedance 2.5 (Higgsfield), em `clips/` (rascunhos 480p), intercaladas com
+telas do Beeno recriadas a partir de prints reais (automação "Roleta comercial" e dashboard de Negócios), com
+dados fictícios. Texto em duas partes (leve branco + negrito verde), logo e CTA no fim.
+
+```bash
+node videos/torre-de-controle/render.js                      # gera output/BEENO-TORRE-DE-CONTROLE.mp4
+node videos/torre-de-controle/render.js --preview 2,10,20    # só alguns quadros
+node videos/torre-de-controle/render.js --music trilha.mp3   # com trilha
+```

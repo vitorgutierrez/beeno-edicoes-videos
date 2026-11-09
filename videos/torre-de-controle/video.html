@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Torre de controle</title>
+<!--
+  Reel "Torre de controle" do Beeno, 1080x1920, 30 fps.
+  Cenas cinematográficas (Seedance 2.5 via Higgsfield, em clips/) intercaladas com telas do Beeno
+  recriadas a partir de prints reais, com dados fictícios. Cada quadro é desenhado por seek(t) e
+  capturado por render.js.
+-->
+<style>
+@font-face { font-family: "ID"; font-weight: 300; src: url("../../assets/fonts/InterDisplay-Light.otf"); }
+@font-face { font-family: "ID"; font-weight: 500; src: url("../../assets/fonts/InterDisplay-Medium.otf"); }
+@font-face { font-family: "ID"; font-weight: 600; src: url("../../assets/fonts/InterDisplay-SemiBold.otf"); }
+@font-face { font-family: "ID"; font-weight: 700; src: url("../../assets/fonts/InterDisplay-Bold.otf"); }
+@font-face { font-family: "ID"; font-weight: 800; src: url("../../assets/fonts/InterDisplay-ExtraBold.otf"); }
+:root { --green:#00CD8A; --ink:#0A1C15; --bg:#0B1A14; --muted:#96A59E; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+body { font-family: "ID", sans-serif; color: #fff; -webkit-font-smoothing: antialiased; }
+#stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); }
+.layer { position: absolute; inset: 0; display: none; }
+.on { display: block; }
+
+/* cenas de vídeo */
+#bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+#shade { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0) 45%, rgba(0,0,0,.55) 68%, rgba(0,0,0,.82) 100%); }
+
+/* fundo das telas */
+.ui-bg { position: absolute; inset: 0; background: var(--bg); overflow: hidden; }
+.ui-bg::before { content: ""; position: absolute; width: 1400px; height: 1400px; border-radius: 50%; left: -160px; top: -420px;
+  background: radial-gradient(circle, rgba(0,160,105,.40) 0%, rgba(0,120,80,.14) 42%, rgba(0,0,0,0) 70%); }
+
+/* texto em duas partes */
+#caption { position: absolute; left: 90px; right: 90px; top: 1250px; }
+#caption .l1 { font-weight: 300; font-size: 66px; line-height: 1.12; letter-spacing: -.02em; }
+#caption .l2 { font-weight: 700; font-size: 76px; line-height: 1.1; letter-spacing: -.025em; color: var(--green); margin-top: 4px; }
+#caption div { opacity: 0; }
+
+/* janela do produto (padrão real: barra preta no topo) */
+.win { position: absolute; left: 70px; top: 190px; width: 940px; height: 980px; border-radius: 22px; overflow: hidden;
+  background: #F4F5F7; box-shadow: 0 50px 110px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.06); transform-origin: 50% 40%;
+  font-family: "Inter", sans-serif; color: #2F3542; }
+.topbar { height: 58px; background: #000; display: flex; align-items: center; gap: 18px; padding: 0 24px; color: #fff; font-size: 19px; }
+.topbar .sp { flex: 1; }
+.topbar .mark { width: 22px; height: 22px; }
+.topbar .ic { width: 20px; height: 20px; border: 2px solid #fff; border-radius: 50%; opacity: .9; }
+.topbar .bell { position: relative; }
+.topbar .bell b { position: absolute; top: -8px; right: -10px; background: #E5484D; color: #fff; font-size: 11px; border-radius: 8px; padding: 1px 5px; }
+
+/* construtor de automação */
+.canvas { position: absolute; left: 0; right: 0; top: 58px; bottom: 0; background-color: #FAFAFA;
+  background-image: radial-gradient(#DADDE3 1.4px, transparent 1.4px); background-size: 26px 26px; }
+.canvas .zoom { position: absolute; inset: 0; zoom: 1.2; }
+.canvas .ttl { position: absolute; left: 30px; top: 22px; font-size: 21px; color: #2F3542; }
+.canvas .close { position: absolute; right: 26px; top: 16px; border: 1.5px solid #2F3542; border-radius: 6px; padding: 7px 14px; font-size: 16px; background: #fff; }
+.node { position: absolute; left: 112px; width: 560px; background: #fff; border: 1.5px solid #C9CDD4; border-radius: 6px; opacity: 0; }
+.node .hd { background: #111; color: #fff; font-size: 20px; padding: 9px 16px; }
+.node .bd { font-size: 19px; padding: 14px 16px; line-height: 1.4; color: #4A5160; }
+.node .bd b { color: #1F2430; }
+.node.lit { border-color: var(--green); box-shadow: 0 0 0 4px rgba(0,205,138,.25), 0 10px 30px rgba(0,120,80,.18); }
+.trig { padding: 16px 18px; border-radius: 10px; box-shadow: 0 4px 14px rgba(0,0,0,.06); }
+.trig .t1 { font-size: 19px; font-weight: 700; color: #1F2430; margin-bottom: 10px; }
+.trig .t1 span { font-weight: 400; color: #4A5160; }
+.trig .t2 { border-left: 4px solid var(--green); padding: 4px 0 4px 12px; font-size: 17px; color: #4A5160; margin-bottom: 12px; }
+.trig .t3 { background: #F1F2F4; border-radius: 6px; padding: 12px 14px; font-size: 17px; color: #4A5160; line-height: 1.6; }
+.wire { position: absolute; left: 390px; width: 3px; background: #2F3542; transform-origin: top; transform: scaleY(0); }
+.pulse { position: absolute; left: 379px; width: 25px; height: 25px; border-radius: 50%; background: var(--green);
+  box-shadow: 0 0 0 8px rgba(0,205,138,.25), 0 0 30px rgba(0,205,138,.9); opacity: 0; }
+.endpill { position: absolute; left: 302px; width: 180px; text-align: center; border: 2px solid #E5484D; color: #E5484D; border-radius: 8px;
+  font-size: 17px; font-weight: 600; padding: 8px 0; background: #fff; opacity: 0; }
+.toast { position: absolute; left: 170px; right: 170px; top: 1128px; display: flex; align-items: center; gap: 16px; background: var(--ink);
+  border: 1.5px solid rgba(0,205,138,.6); border-radius: 18px; padding: 18px 24px; font-size: 26px; color: #fff; opacity: 0;
+  box-shadow: 0 24px 60px rgba(0,0,0,.5); font-family: "ID", sans-serif; }
+.toast .ck { width: 46px; height: 46px; border-radius: 12px; background: var(--green); display: grid; place-items: center; flex: none; }
+.toast b { color: var(--green); }
+
+/* dashboard */
+.side { position: absolute; left: 0; top: 58px; bottom: 0; width: 62px; background: #000; display: flex; flex-direction: column; align-items: center; gap: 30px; padding-top: 30px; }
+.side i { display: block; width: 24px; height: 24px; border: 2.5px solid #fff; border-radius: 6px; opacity: .85; }
+.side i:nth-child(2) { border-radius: 50%; } .side i:nth-child(4) { border-radius: 50%; width: 22px; }
+.dash { position: absolute; left: 62px; right: 0; top: 58px; bottom: 0; padding: 22px 26px; }
+.dash h3 { font-size: 26px; font-weight: 600; color: #111; margin-bottom: 16px; }
+.dash .sel { display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid #C9CDD4; border-radius: 6px; background: #fff; padding: 8px 14px; font-size: 17px; font-weight: 600; width: 320px; margin-bottom: 20px; }
+.dash .sel .bars { display: inline-flex; gap: 2px; align-items: flex-end; height: 16px; }
+.dash .sel .bars i { display: block; width: 4px; background: #3B82F6; }
+.kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.card { background: #fff; border: 1.5px solid #E1E4E8; border-radius: 8px; opacity: 0; position: relative; }
+.card .dots { position: absolute; right: 14px; top: 6px; color: #9AA1AC; font-size: 18px; letter-spacing: 1px; }
+.kpi { height: 166px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.kpi .n { font-family: "Lato", "Inter", sans-serif; font-size: 54px; font-weight: 800; color: #3E4A64; letter-spacing: -.01em; }
+.kpi .lb { font-size: 17px; color: #3E4A64; margin-top: 4px; font-weight: 500; }
+.row2 { display: grid; grid-template-columns: 1fr 1.35fr; gap: 14px; margin-top: 14px; }
+.chart { height: 330px; padding: 16px 18px; }
+.chart .ct { font-size: 19px; font-weight: 600; color: #3E4A64; }
+.gauge { position: relative; width: 260px; height: 230px; margin: 20px auto 0; }
+.gauge .v { position: absolute; left: 0; right: 0; top: 92px; text-align: center; font-size: 34px; font-weight: 700; color: #3E4A64; }
+.donut { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
+.legend { flex: 1; font-size: 15px; color: #3E4A64; }
+.legend div { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+.legend i { width: 13px; height: 13px; border-radius: 50%; display: block; flex: none; }
+.legend span { flex: 1; } .legend b { font-weight: 600; }
+.dn { position: relative; width: 200px; height: 200px; flex: none; }
+.dn .c { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+.dn .c b { display: block; font-size: 28px; color: #3E4A64; } .dn .c span { font-size: 13px; color: #6B7280; letter-spacing: .06em; }
+
+/* encerramento */
+#end .logo { position: absolute; left: 50%; top: 600px; width: 560px; margin-left: -280px; opacity: 0; }
+#end .tag { position: absolute; left: 90px; right: 90px; top: 960px; text-align: center; }
+#end .tag .a { font-weight: 300; font-size: 66px; letter-spacing: -.02em; opacity: 0; }
+#end .tag .b { display: inline-block; margin-top: 10px; font-weight: 700; font-size: 74px; letter-spacing: -.025em; background: var(--green); color: var(--ink); padding: 0 16px 4px; opacity: 0; }
+#end .cta { position: absolute; left: 0; right: 0; top: 1280px; text-align: center; opacity: 0; }
+#end .cta span { display: inline-flex; align-items: center; gap: 16px; border: 2px solid var(--green); color: #fff; border-radius: 18px; padding: 22px 36px; font-size: 34px; font-weight: 600; }
+#end .cta small { display: block; margin-top: 22px; font-size: 26px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <!-- vídeo -->
+  <div class="layer" id="video"><img id="bg" alt=""><div id="shade"></div></div>
+
+  <!-- automação -->
+  <div class="layer" id="auto">
+    <div class="ui-bg"></div>
+    <div class="win">
+      <div class="topbar"><svg class="mark" viewBox="0 0 24 24"><path d="M15 4c-4 0-6 2-6 4.5S11 12 12 12.5 15 15 15 16.5 13 20 9 20" fill="none" stroke="#00CD8A" stroke-width="2.6" stroke-linecap="round"/></svg>
+        <span class="sp"></span><span>Ajuda</span><span class="ic"></span><span class="ic"></span><span class="ic bell"><b>3</b></span></div>
+      <div class="canvas"><div class="zoom">
+        <div class="ttl">[Beeno] Etapa Lead · Roleta comercial</div>
+        <div class="close">Fechar construtor</div>
+        <div class="node trig" id="n0" style="top:62px">
+          <div class="t1">$ Negócio <span>· gatilho de inscrição</span></div>
+          <div class="t2">Inscreva negócios quando atenderem a estes filtros:</div>
+          <div class="t3">Etapa do negócio<br>Está na etapa/pipeline <b style="color:#1F2430">Lead</b></div>
+        </div>
+        <div class="wire" id="w1" style="top:264px; height:30px"></div>
+        <div class="node" id="n1" style="top:294px"><div class="hd">Revezar proprietário</div><div class="bd">Reveze os proprietários das equipes <b>Comercial Beeno</b></div></div>
+        <div class="wire" id="w2" style="top:410px; height:30px"></div>
+        <div class="node" id="n2" style="top:440px"><div class="hd">Atraso</div><div class="bd">Atraso de <b>1 minuto</b></div></div>
+        <div class="wire" id="w3" style="top:528px; height:30px"></div>
+        <div class="node" id="n3" style="top:558px"><div class="hd">Criar tarefa</div><div class="bd">Crie a tarefa <b>Realizar primeiro contato</b> e atribua a <b>Proprietário do negócio</b></div></div>
+        <div class="wire" id="w4" style="top:704px; height:24px; display:none"></div>
+        <div class="endpill" id="n4" style="top:728px; display:none">Fim das execuções</div>
+        <div class="pulse" id="pulse"></div>
+      </div></div>
+    </div>
+    <div class="toast" id="toast"><span class="ck"><svg width="26" height="26" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="#0A1C15" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span>Tarefa criada para <b>Ana Lima</b></span></div>
+  </div>
+
+  <!-- dashboard -->
+  <div class="layer" id="dashl">
+    <div class="ui-bg"></div>
+    <div class="win">
+      <div class="topbar"><svg class="mark" viewBox="0 0 24 24"><path d="M15 4c-4 0-6 2-6 4.5S11 12 12 12.5 15 15 15 16.5 13 20 9 20" fill="none" stroke="#00CD8A" stroke-width="2.6" stroke-linecap="round"/></svg>
+        <span class="sp"></span><span>Ajuda</span><span class="ic"></span><span class="ic"></span><span class="ic bell"><b>3</b></span></div>
+      <div class="side"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="dash">
+        <h3>Dashboards</h3>
+        <div class="sel"><span class="bars"><i style="height:8px"></i><i style="height:14px"></i><i style="height:11px"></i></span>Negócios</div>
+        <div class="kpis">
+          <div class="card kpi" id="k0"><span class="dots">···</span><div class="n" data-to="1248" data-fmt="int">0</div><div class="lb">Negócios</div></div>
+          <div class="card kpi" id="k1"><span class="dots">···</span><div class="n" data-to="18.4" data-fmt="mi">0</div><div class="lb">Valor total</div></div>
+          <div class="card kpi" id="k2"><span class="dots">···</span><div class="n" data-to="14760" data-fmt="brl">0</div><div class="lb">Valor médio</div></div>
+          <div class="card kpi" id="k3"><span class="dots">···</span><div class="n" data-to="32" data-fmt="dias">0</div><div class="lb">Tempo médio de fechamento</div></div>
+        </div>
+        <div class="row2">
+          <div class="card chart" id="k4"><span class="dots">···</span><div class="ct">Taxa de conversão</div>
+            <div class="gauge"><svg id="gauge" viewBox="0 0 260 230" width="260" height="230"></svg><div class="v" id="gv">0%</div></div></div>
+          <div class="card chart" id="k5"><span class="dots">···</span><div class="ct">Negócios perdidos por motivo</div>
+            <div class="donut">
+              <div class="legend">
+                <div><i style="background:#4C9BE8"></i><span>Sem resposta</span><b>41%</b></div>
+                <div><i style="background:#1D6FD6"></i><span>Não qualificado</span><b>18%</b></div>
+                <div><i style="background:#7AB648"></i><span>Preço</span><b>14%</b></div>
+                <div><i style="background:#4F8A2B"></i><span>Concorrente</span><b>12%</b></div>
+                <div><i style="background:#9AA1AC"></i><span>Outros</span><b>15%</b></div>
+              </div>
+              <div class="dn"><svg id="donut" viewBox="0 0 200 200" width="200" height="200"></svg><div class="c"><div><b id="dv">0</b><span>TOTAL</span></div></div></div>
+            </div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- encerramento -->
+  <div class="layer" id="end">
+    <div class="ui-bg"></div>
+    <img class="logo" src="../../assets/brand/beeno-logo-dark-bg.svg" alt="beeno">
+    <div class="tag"><div class="a">Vendas e marketing</div><div class="b">realmente integrados.</div></div>
+    <div class="cta"><span>Agende uma demonstração</span><small>Link na bio</small></div>
+  </div>
+
+  <div id="caption"><div class="l1"></div><div class="l2"></div></div>
+</div>
+
+<script>
+const FPS = 30;
+// Linha do tempo. src: pasta de quadros; off: segundo do clipe em que a cena começa.
+const SCENES = [
+  { kind: 'video', src: 'cena1', off: 0.3, dur: 3.6, l1: 'Toda operação comercial', l2: 'tem uma torre de controle.' },
+  { kind: 'video', src: 'cena2', off: 0.6, dur: 2.4, l1: '', l2: 'Ou deveria ter.' },
+  { kind: 'video', src: 'cena3', off: 1.3, dur: 3.4, l1: 'Sem ela,', l2: 'cada negócio voa sozinho.' },
+  { kind: 'auto', dur: 4.8, l1: 'Lead entrou:', l2: 'dono e tarefa em 1 minuto.' },
+  { kind: 'video', src: 'cena4', off: 1.0, dur: 3.0, l1: 'Marketing e vendas', l2: 'na mesma pista.' },
+  { kind: 'dash', dur: 5.0, l1: 'O gestor vê tudo', l2: 'sem pedir relatório.' },
+  { kind: 'video', src: 'cena5', off: 0.9, dur: 3.8, l1: 'Negócio com rota', l2: 'chega ao destino.' },
+  { kind: 'end', dur: 5.0 },
+];
+let acc = 0; for (const s of SCENES) { s.start = acc; acc += s.dur; }
+window.TOTAL = acc;
+if (window.OVERRIDES) Object.assign(SCENES, window.OVERRIDES);
+
+const $ = id => document.getElementById(id);
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => 1 - Math.pow(1 - clamp(x), 3);
+const ramp = (t, a, d) => ease((t - a) / d);
+const fmt = (v, f) => f === 'int' ? Math.round(v).toLocaleString('pt-BR')
+  : f === 'mi' ? 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'M'
+  : f === 'brl' ? 'R$ ' + Math.round(v).toLocaleString('pt-BR')
+  : Math.round(v) + ' dias';
+
+function rise(el, t, a, dist = 30) { const k = ramp(t, a, 0.5); el.style.opacity = k; el.style.transform = `translateY(${(1 - k) * dist}px)`; }
+function winIn(el, t) { const k = ramp(t, 0, 0.45); el.style.opacity = k; el.style.transform = `scale(${0.94 + 0.06 * k})`; }
+
+// gauge e donut
+function arc(cx, cy, r, a0, a1) {
+  const p = a => [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+  const [x0, y0] = p(a0), [x1, y1] = p(a1);
+  return `M${x0},${y0} A${r},${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${x1},${y1}`;
+}
+function drawGauge(k) {
+  const a0 = Math.PI * 0.75, span = Math.PI * 1.5, segs = [[0, .12, '#E8685F'], [.12, .24, '#F2C230'], [.24, 1, '#7AB648']];
+  let s = `<path d="${arc(130, 125, 95, a0, a0 + span)}" stroke="#ECEEF1" stroke-width="34" fill="none"/>`;
+  for (const [f0, f1, c] of segs) { const e = Math.min(f1, k); if (e > f0) s += `<path d="${arc(130, 125, 95, a0 + span * f0, a0 + span * e)}" stroke="${c}" stroke-width="34" fill="none"/>`; }
+  $('gauge').innerHTML = s;
+}
+function drawDonut(k) {
+  const vals = [[.41, '#4C9BE8'], [.18, '#1D6FD6'], [.14, '#7AB648'], [.12, '#4F8A2B'], [.15, '#9AA1AC']];
+  let a = -Math.PI / 2, s = '', lim = k;
+  for (const [v, c] of vals) { const e = Math.min(v, lim); if (e > 0.001) s += `<path d="${arc(100, 100, 74, a, a + e * Math.PI * 2 - 0.02)}" stroke="${c}" stroke-width="40" fill="none"/>`; a += v * Math.PI * 2; lim -= v; if (lim <= 0) break; }
+  $('donut').innerHTML = s;
+}
+
+function drawAuto(t) {
+  winIn(document.querySelector('#auto .win'), t);
+  const step = 0.5, t0 = 0.35;
+  const nodes = ['n0', 'n1', 'n2', 'n3', 'n4'], wires = ['w1', 'w2', 'w3', 'w4'];
+  nodes.forEach((id, i) => { const a = t0 + i * step; const k = ramp(t, a, 0.35); $(id).style.opacity = k; $(id).style.transform = `translateY(${(1 - k) * 16}px)`; });
+  wires.forEach((id, i) => { $(id).style.transform = `scaleY(${ramp(t, t0 + i * step + 0.25, 0.3)})`; });
+  // pulso verde descendo pelo fluxo depois de montado
+  const p0 = t0 + 5 * step + 0.1, stops = [264, 410, 528, 704, 704], ns = ['n1', 'n2', 'n3', 'n4'];
+  const pd = 0.32, pulse = $('pulse');
+  if (t < p0) { pulse.style.opacity = 0; }
+  else {
+    const u = (t - p0) / pd, i = Math.min(Math.floor(u), 3), f = ease(u - i);
+    const y = i >= 3 && u >= 4 ? stops[4] : stops[i] + (stops[i + 1] - stops[i]) * f;
+    pulse.style.opacity = u > 4.6 ? 0 : 1; pulse.style.top = (y - 12) + 'px';
+  }
+  ns.forEach((id, i) => $(id).classList.toggle('lit', t >= p0 + (i + 1) * pd - 0.05 && t < p0 + (i + 1) * pd + 0.6));
+  $('n0').classList.toggle('lit', t >= p0 - 0.1 && t < p0 + 0.4);
+  const tt = p0 + 3 * pd + 0.15; const k = ramp(t, tt, 0.4);
+  $('toast').style.opacity = k; $('toast').style.transform = `translateY(${(1 - k) * 24}px)`;
+}
+
+function drawDash(t) {
+  winIn(document.querySelector('#dashl .win'), t);
+  ['k0', 'k1', 'k2', 'k3', 'k4', 'k5'].forEach((id, i) => { const k = ramp(t, 0.35 + i * 0.16, 0.35); $(id).style.opacity = k; $(id).style.transform = `translateY(${(1 - k) * 14}px)`; });
+  document.querySelectorAll('#dashl .kpi .n').forEach((n, i) => { const k = ramp(t, 0.45 + i * 0.16, 1.4); n.textContent = fmt(+n.dataset.to * k, n.dataset.fmt); });
+  const g = ramp(t, 1.1, 1.4); drawGauge(g * 0.70); $('gv').textContent = (18.6 * g).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+  const d = ramp(t, 1.25, 1.4); drawDonut(d); $('dv').textContent = Math.round(312 * d);
+}
+
+function drawEnd(t) {
+  const lg = document.querySelector('#end .logo'); const k = ramp(t, 0.2, 0.7);
+  lg.style.opacity = k; lg.style.transform = `scale(${0.92 + 0.08 * k})`;
+  rise(document.querySelector('#end .a'), t, 0.9); rise(document.querySelector('#end .b'), t, 1.25);
+  rise(document.querySelector('#end .cta'), t, 1.9);
+}
+
+function caption(s, t) {
+  const l1 = document.querySelector('#caption .l1'), l2 = document.querySelector('#caption .l2');
+  if (!s.l2) { l1.style.opacity = l2.style.opacity = 0; return; }
+  l1.textContent = s.l1; l2.textContent = s.l2;
+  const a = s.l1 ? 0.25 : 0.15;
+  if (s.l1) rise(l1, t, a, 26); else l1.style.opacity = 0;
+  rise(l2, t, s.l1 ? a + 0.55 : a, 26);
+}
+
+window.seek = async function (T) {
+  const s = SCENES.find(x => T >= x.start && T < x.start + x.dur) || SCENES[SCENES.length - 1];
+  const t = T - s.start;
+  for (const id of ['video', 'auto', 'dashl', 'end']) $(id).classList.remove('on');
+  if (s.kind === 'video') {
+    $('video').classList.add('on');
+    const n = Math.floor((s.off + t) * FPS) + 1;
+    const img = $('bg'); const src = `frames/${s.src}/${String(n).padStart(4, '0')}.jpg`;
+    if (!img.src.endsWith(src)) { img.src = src; await img.decode().catch(() => {}); }
+    // "assentada" curta no corte
+    const k = ramp(t, 0, 0.25); img.style.transform = `scale(${1.04 - 0.04 * k})`;
+  } else if (s.kind === 'auto') { $('auto').classList.add('on'); drawAuto(t); }
+  else if (s.kind === 'dash') { $('dashl').classList.add('on'); drawDash(t); }
+  else { $('end').classList.add('on'); drawEnd(t); }
+  caption(s, t);
+};
+</script>
+</body>
+</html>
