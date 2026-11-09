@@ -48,3 +48,16 @@ python3 editor/build.py reel02 --src /caminho/Teleprompter-2026-06-10_15-56-43.m
 - Cenas de motion graphics: `editor/scenes.py`; primitivas visuais: `editor/mg.py`
 - Trilha e clique de transição: `editor/music.py`. Coloque as trilhas em `assets/music/` (nomes em `MUSIC` de cada reel); o clique é baixado do Mixkit na primeira execução
 - Transcrições com tempo por palavra: `transcripts/`
+
+## Posts estáticos e carrosséis (`posts/`)
+
+Cada post é um HTML com uma `<section class="slide">` por slide (1080x1350, 4:5), no sistema visual do
+feed: fundo verde-escuro com brilho, logo no topo, traço verde, palavra-chave com bloco verde, rodapé com
+linha fina. Fonte Inter Display (`assets/fonts/`).
+
+```bash
+node posts/render.js posts/carrossel-01-produto   # gera png/slide-01.png ... e png/preview.png
+```
+
+- `carrossel-01-produto/`: "Por dentro do Beeno", 6 slides mostrando funil, histórico, cadências e
+  marketing integrado. As telas são ilustrações com dados fictícios, não prints reais. Legenda em `legenda.md`.

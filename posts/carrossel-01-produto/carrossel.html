@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Carrossel 01 — Por dentro do Beeno</title>
+<!--
+  Carrossel de produto do Beeno, 6 slides 1080x1350 (4:5).
+  Segue o sistema visual do feed @beeno.ai: fundo verde-escuro com brilho, logo no topo,
+  traço verde, palavra-chave com bloco verde, rodapé com linha fina, seta no slide 1.
+  As telas são ilustrações em HTML (dados fictícios), não prints reais do sistema.
+  Render: node posts/render.js posts/carrossel-01-produto
+-->
+<style>
+@font-face { font-family: "ID"; font-weight: 300; src: url("../../assets/fonts/InterDisplay-Light.otf"); }
+@font-face { font-family: "ID"; font-weight: 400; src: url("../../assets/fonts/InterDisplay-Regular.otf"); }
+@font-face { font-family: "ID"; font-weight: 500; src: url("../../assets/fonts/InterDisplay-Medium.otf"); }
+@font-face { font-family: "ID"; font-weight: 600; src: url("../../assets/fonts/InterDisplay-SemiBold.otf"); }
+@font-face { font-family: "ID"; font-weight: 700; src: url("../../assets/fonts/InterDisplay-Bold.otf"); }
+@font-face { font-family: "ID"; font-weight: 800; src: url("../../assets/fonts/InterDisplay-ExtraBold.otf"); }
+
+:root {
+  --green: #00CD8A;
+  --green-600: #00A973;
+  --green-50: #E6FAF3;
+  --ink: #0A1C15;
+  --bg: #0B1A14;
+  --muted: #96A59E;
+  --line: rgba(255,255,255,.14);
+  --ui-text: #12241C;
+  --ui-muted: #6B7C74;
+  --ui-line: #E6ECE9;
+  --ui-bg: #F5F8F6;
+  --red: #FF6568;
+  --amber: #F5A524;
+  --blue: #3B82F6;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #222; font-family: "ID", sans-serif; color: #fff; -webkit-font-smoothing: antialiased; }
+
+.slide {
+  position: relative; width: 1080px; height: 1350px; overflow: hidden;
+  background: var(--bg);
+  margin: 0 0 40px;
+}
+.slide::before { /* brilho verde */
+  content: ""; position: absolute; width: 1100px; height: 1100px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,160,105,.38) 0%, rgba(0,120,80,.14) 40%, rgba(0,0,0,0) 70%);
+  top: var(--gy, -420px); left: var(--gx, 380px); pointer-events: none;
+}
+.slide > * { position: absolute; }
+
+/* cabeçalho / rodapé (padrão do feed) */
+.logo { top: 62px; left: 80px; width: 172px; }
+.dash { top: 82px; right: 80px; width: 56px; height: 5px; background: var(--green); border-radius: 3px; }
+.foot { left: 80px; right: 80px; bottom: 64px; border-top: 1.5px solid var(--line); padding-top: 22px;
+  display: flex; justify-content: space-between; font-size: 22px; color: var(--muted); letter-spacing: .01em; }
+.foot b { color: #fff; font-weight: 600; }
+
+/* tipografia */
+.eyebrow { display: inline-flex; align-items: center; gap: 12px; font-size: 24px; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--green); }
+.eyebrow .n { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
+  border: 2px solid var(--green); letter-spacing: 0; font-size: 21px; }
+.h1 { font-weight: 700; font-size: 88px; line-height: 1.16; letter-spacing: -.025em; }
+.h2 { font-weight: 700; font-size: 64px; line-height: 1.06; letter-spacing: -.022em; }
+.light { font-weight: 300; }
+.hl { background: var(--green); color: var(--ink); padding: 0 .12em .02em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.g { color: var(--green); }
+.body { font-size: 31px; line-height: 1.42; color: #C9D4CF; font-weight: 400; }
+.body b { color: #fff; font-weight: 600; }
+
+/* ---------- UI (telas ilustrativas, tema claro como o produto) ---------- */
+.win { background: #fff; border-radius: 22px; color: var(--ui-text); overflow: hidden;
+  box-shadow: 0 40px 90px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06); }
+.win-bar { height: 64px; display: flex; align-items: center; gap: 14px; padding: 0 26px;
+  border-bottom: 1px solid var(--ui-line); font-size: 22px; font-weight: 600; }
+.win-bar .bi { width: 34px; height: 34px; border-radius: 9px; background: var(--green); display: grid; place-items: center; }
+.win-bar .bi svg { width: 22px; height: 22px; }
+.win-bar .crumb { color: var(--ui-muted); font-weight: 500; }
+.win-bar .sp { flex: 1; }
+.btn { background: var(--green); color: var(--ink); font-weight: 700; border-radius: 10px; padding: 9px 16px; font-size: 19px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 12px; font-size: 16px; font-weight: 600; }
+.chip.green { background: var(--green-50); color: var(--green-600); }
+.chip.amber { background: #FEF3DC; color: #B7791F; }
+.chip.blue { background: #E8F0FE; color: #2563EB; }
+.chip.gray { background: #EEF2F0; color: var(--ui-muted); }
+.av { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 14px; font-weight: 700; color: #fff; flex: none; }
+.ico { width: 22px; height: 22px; flex: none; }
+
+/* kanban */
+.kb { display: flex; gap: 18px; padding: 22px 24px 26px; background: var(--ui-bg); height: calc(100% - 64px); }
+.col { width: 270px; flex: none; }
+.col-h { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
+.col-h b { font-size: 19px; font-weight: 700; }
+.col-h span { font-size: 16px; color: var(--ui-muted); font-weight: 600; }
+.col-sum { font-size: 15px; color: var(--ui-muted); margin-bottom: 12px; }
+.col-bar { height: 4px; border-radius: 2px; margin-bottom: 14px; }
+.card { background: #fff; border: 1px solid var(--ui-line); border-radius: 14px; padding: 16px 16px 14px; margin-bottom: 12px; }
+.card .t { font-size: 19px; font-weight: 700; margin-bottom: 4px; }
+.card .v { font-size: 17px; color: var(--ui-muted); margin-bottom: 12px; }
+.card .r { display: flex; align-items: center; justify-content: space-between; }
+.card .av { width: 28px; height: 28px; font-size: 12px; }
+.card.drag { border: 2px solid var(--green); box-shadow: 0 24px 50px rgba(0,80,50,.28); transform: rotate(-3deg) translate(14px, -6px); }
+.card.ghost { border: 2px dashed #CFE9DE; background: transparent; height: 110px; }
+
+/* timeline */
+.tl { padding: 26px 32px; }
+.contact { display: flex; align-items: center; gap: 18px; padding-bottom: 22px; border-bottom: 1px solid var(--ui-line); margin-bottom: 8px; }
+.contact .av { width: 64px; height: 64px; font-size: 24px; }
+.contact .nm { font-size: 26px; font-weight: 700; }
+.contact .rl { font-size: 18px; color: var(--ui-muted); }
+.contact .sp { flex: 1; }
+.ev { display: flex; gap: 18px; position: relative; padding: 16px 0; }
+.ev::before { content: ""; position: absolute; left: 21px; top: 60px; bottom: -16px; width: 2px; background: var(--ui-line); }
+.ev:last-child::before { display: none; }
+.ev .dot { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; flex: none; }
+.ev .tx { flex: 1; }
+.ev .tx b { font-size: 20px; font-weight: 700; display: block; margin-bottom: 3px; }
+.ev .tx span { font-size: 17px; color: var(--ui-muted); }
+.ev .when { font-size: 16px; color: var(--ui-muted); font-weight: 500; white-space: nowrap; padding-top: 3px; }
+.wave { display: flex; align-items: center; gap: 10px; margin-top: 10px; background: var(--ui-bg); border-radius: 12px; padding: 10px 14px; width: 430px; }
+.wave .play { width: 32px; height: 32px; border-radius: 50%; background: var(--green); display: grid; place-items: center; flex: none; }
+.wave i { display: block; width: 4px; border-radius: 2px; background: #B9CFC6; }
+.wave i.on { background: var(--green-600); }
+
+/* cadência */
+.cad { padding: 24px 30px 28px; }
+.cad-h { display: flex; gap: 12px; margin-bottom: 18px; }
+.step { display: flex; align-items: center; gap: 18px; padding: 16px 18px; border: 1px solid var(--ui-line); border-radius: 16px; margin-bottom: 12px; }
+.step .day { width: 74px; flex: none; font-size: 15px; font-weight: 700; color: var(--ui-muted); text-transform: uppercase; letter-spacing: .06em; }
+.step .day b { display: block; font-size: 28px; color: var(--ui-text); letter-spacing: -.01em; }
+.step .dot { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; flex: none; }
+.step .tx { flex: 1; }
+.step .tx b { font-size: 20px; display: block; }
+.step .tx span { font-size: 16px; color: var(--ui-muted); }
+.step.now { border: 2px solid var(--green); background: #F2FCF8; }
+.step.done { opacity: .62; }
+
+/* toast / chips flutuantes */
+.toast { display: flex; align-items: center; gap: 14px; background: var(--ink); color: #fff; border: 1.5px solid rgba(0,205,138,.55);
+  border-radius: 16px; padding: 16px 22px; font-size: 21px; font-weight: 500; box-shadow: 0 24px 60px rgba(0,0,0,.45); }
+.toast .bolt { width: 38px; height: 38px; border-radius: 10px; background: var(--green); display: grid; place-items: center; flex: none; }
+.toast b { color: var(--green); font-weight: 700; }
+
+/* landing page */
+.lp-top { height: 52px; background: #EEF2F0; display: flex; align-items: center; gap: 10px; padding: 0 20px; }
+.lp-top i { width: 13px; height: 13px; border-radius: 50%; background: #D3DBD7; display: block; }
+.lp-top .url { margin-left: 14px; flex: 1; height: 30px; border-radius: 8px; background: #fff; font-size: 15px; color: var(--ui-muted); display: flex; align-items: center; padding: 0 14px; }
+.lp { padding: 34px 34px; }
+.lp h4 { font-size: 30px; line-height: 1.12; letter-spacing: -.015em; margin-bottom: 10px; }
+.lp p { font-size: 17px; color: var(--ui-muted); margin-bottom: 20px; }
+.fld { height: 50px; border: 1.5px solid var(--ui-line); border-radius: 10px; margin-bottom: 12px; display: flex; align-items: center; padding: 0 16px; font-size: 17px; color: var(--ui-text); }
+.fld.ph { color: #A9B6B0; }
+.lp .btn { display: block; text-align: center; padding: 14px; font-size: 19px; margin-top: 6px; }
+
+/* setas e botão de avançar */
+.next { width: 76px; height: 76px; border-radius: 50%; background: var(--green); display: grid; place-items: center; }
+.prog { display: flex; gap: 8px; }
+.prog i { display: block; width: 26px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.22); }
+.prog i.on { width: 46px; background: var(--green); }
+
+.bmark { fill: rgba(255,255,255,.035); }
+</style>
+</head>
+<body>
+
+<!-- sprites -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="b" viewBox="79 24 161 206"><path d="M221.24,116.39c-5.89-10.28-13.89-18.23-24-23.870c-10.11-5.63-21.63-8.45-34.56-8.45c-10.94,0-20.81,2.45-29.59,7.34c-4.87,2.71-9.18,6.22-12.93,10.51V45.8l-30.8-11.71h-0.03v184.51h29.59v-16.93c3.86,4.68,8.41,8.46,13.68,11.34c8.95,4.89,18.98,7.34,30.09,7.34c12.93,0,24.45-2.82,34.56-8.45c10.11-5.63,18.11-13.55,24-23.75c5.880-10.19,8.83-22.17,8.83-35.93C230.07,138.61,227.12,126.670,221.24,116.39z M193.26,174.21c-3.48,6.38-8.17,11.28-14.05,14.67c-5.89,3.4-12.64,5.1-20.27,5.1c-7.3,0-13.93-1.7-19.89-5.1c-5.97-3.4-10.69-8.29-14.17-14.67c-3.48-6.38-5.22-13.72-5.22-22.01c0-8.45,1.74-15.79,5.22-22.01c3.48-6.22,8.21-11.02,14.17-14.42c5.97-3.4,12.6-5.1,19.89-5.1c7.62,0,14.38,1.7,20.27,5.1c5.88,3.4,10.57,8.21,14.05,14.42c3.48,6.22,5.22,13.55,5.22,22.01C198.49,160.49,196.74,167.83,193.26,174.21z"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></g></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></g></symbol>
+    <symbol id="i-form" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></g></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path fill="currentColor" d="M13.2 2 4 13.6h6.6L9.8 22 20 9.8h-6.7z"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.5v13l11-6.5z"/></symbol>
+    <symbol id="i-funnel" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3 4h18l-7 8.5V19l-4 2v-8.5z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></g></symbol>
+  </defs>
+</svg>
+
+<!-- Kanban reaproveitado nos slides 1 e 2 -->
+<template id="kanban">
+  <div class="win-bar">
+    <div class="bi"><svg fill="#fff"><use href="#b"/></svg></div>
+    <span>Funil de vendas</span><span class="crumb">/ Pipeline comercial</span>
+    <span class="sp"></span><span class="btn">+ Negócio</span>
+  </div>
+  <div class="kb">
+    <div class="col">
+      <div class="col-h"><b>Novo lead</b><span>12</span></div>
+      <div class="col-sum">R$ 184 mil</div>
+      <div class="col-bar" style="background:#B9CFC6"></div>
+      <div class="card"><div class="t">Grupo Atlas</div><div class="v">R$ 48.000</div>
+        <div class="r"><span class="chip blue">Landing page</span><span class="av" style="background:#7C5CFC">MC</span></div></div>
+      <div class="card"><div class="t">Nobre Logística</div><div class="v">R$ 22.500</div>
+        <div class="r"><span class="chip gray">Indicação</span><span class="av" style="background:#0EA5E9">RS</span></div></div>
+      <div class="card"><div class="t">Vértice Saúde</div><div class="v">R$ 31.000</div>
+        <div class="r"><span class="chip blue">E-mail</span><span class="av" style="background:#F97316">AL</span></div></div>
+    </div>
+    <div class="col">
+      <div class="col-h"><b>Qualificação</b><span>8</span></div>
+      <div class="col-sum">R$ 236 mil</div>
+      <div class="col-bar" style="background:#7DDDB9"></div>
+      <div class="card"><div class="t">Prisma Educação</div><div class="v">R$ 64.000</div>
+        <div class="r"><span class="chip amber">Ligar hoje</span><span class="av" style="background:#0EA5E9">RS</span></div></div>
+      <div class="card ghost"></div>
+      <div class="card"><div class="t">Lume Energia</div><div class="v">R$ 27.900</div>
+        <div class="r"><span class="chip gray">Cadência</span><span class="av" style="background:#7C5CFC">MC</span></div></div>
+    </div>
+    <div class="col">
+      <div class="col-h"><b>Proposta</b><span>5</span></div>
+      <div class="col-sum">R$ 312 mil</div>
+      <div class="col-bar" style="background:var(--green)"></div>
+      <div class="card drag"><div class="t">Casa Verde Imóveis</div><div class="v">R$ 89.000</div>
+        <div class="r"><span class="chip green">Movido agora</span><span class="av" style="background:#F97316">AL</span></div></div>
+      <div class="card"><div class="t">Ondas Telecom</div><div class="v">R$ 54.000</div>
+        <div class="r"><span class="chip gray">Proposta enviada</span><span class="av" style="background:#0EA5E9">RS</span></div></div>
+    </div>
+    <div class="col">
+      <div class="col-h"><b>Fechamento</b><span>3</span></div>
+      <div class="col-sum">R$ 141 mil</div>
+      <div class="col-bar" style="background:var(--green-600)"></div>
+      <div class="card"><div class="t">Rede Farol</div><div class="v">R$ 72.000</div>
+        <div class="r"><span class="chip green">Contrato</span><span class="av" style="background:#7C5CFC">MC</span></div></div>
+    </div>
+  </div>
+</template>
+
+<!-- ============ 1. CAPA ============ -->
+<section class="slide" id="s1" style="--gx:420px; --gy:-380px">
+  <img class="logo" src="../../assets/brand/beeno-logo-dark-bg.svg" alt="beeno">
+  <div class="dash"></div>
+
+  <div class="win kanban" style="left:250px; top:170px; width:1120px; height:560px; transform: perspective(2200px) rotateY(-14deg) rotateX(6deg) rotate(-2deg); transform-origin: left center; -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent 92%); mask-image: linear-gradient(to bottom, #000 45%, transparent 92%);"></div>
+
+  <div style="left:80px; top:790px; width:920px;">
+    <div class="eyebrow" style="margin-bottom:28px">Por dentro do Beeno</div>
+    <div class="h1"><span class="light">Do primeiro clique ao contrato assinado,</span><br><span class="hl">numa tela só.</span></div>
+  </div>
+
+  <div class="prog" style="left:80px; top:1206px;"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="next" style="right:80px; top:1170px;"><svg width="36" height="36" color="#0A1C15"><use href="#i-arrow"/></svg></div>
+</section>
+
+<!-- ============ 2. FUNIL ============ -->
+<section class="slide" id="s2" style="--gx:-500px; --gy:700px">
+  <img class="logo" src="../../assets/brand/beeno-logo-dark-bg.svg" alt="beeno">
+  <div class="dash"></div>
+  <div style="left:80px; top:190px; width:920px;">
+    <div class="eyebrow" style="margin-bottom:30px"><span class="n">1</span>Funil visual</div>
+    <div class="h2">Seu funil inteiro, <span class="g">à vista.</span></div>
+    <p class="body" style="margin-top:26px; width:880px">Cada negócio no seu estágio, com valor e responsável. <b>Moveu o card, a automação da etapa já roda.</b></p>
+  </div>
+  <div class="win kanban" style="left:80px; top:540px; width:1180px; height:630px;"></div>
+  <div class="toast" style="left:420px; top:1088px;">
+    <span class="bolt"><svg width="22" height="22" color="#0A1C15"><use href="#i-bolt"/></svg></span>
+    <span><b>Proposta</b>: e-mail enviado e tarefa criada</span>
+  </div>
+  <div class="foot"><span><b>beeno</b>.ai</span><span>Por dentro do Beeno · 2/6</span></div>
+</section>
+
+<!-- ============ 3. TIMELINE ============ -->
+<section class="slide" id="s3" style="--gx:520px; --gy:-480px">
+  <img class="logo" src="../../assets/brand/beeno-logo-dark-bg.svg" alt="beeno">
+  <div class="dash"></div>
+  <div style="left:80px; top:190px; width:920px;">
+    <div class="eyebrow" style="margin-bottom:30px"><span class="n">2</span>Histórico do cliente</div>
+    <div class="h2">A história do cliente<br><span class="g">num só lugar.</span></div>
+    <p class="body" style="margin-top:26px; width:900px">Página visitada, e-mail aberto, ligação gravada. <b>Quem assume a conta não começa do zero.</b></p>
+  </div>
+  <div class="win" style="left:80px; top:570px; width:836px; zoom:1.1;">
+    <div class="tl">
+      <div class="contact">
+        <span class="av" style="background:#7C5CFC">MC</span>
+        <div><div class="nm">Mariana Costa</div><div class="rl">Diretora comercial · Grupo Atlas</div></div>
+        <span class="sp"></span><span class="chip green" style="font-size:18px; padding:7px 14px">R$ 48.000 · Proposta</span>
+      </div>
+      <div class="ev">
+        <span class="dot" style="background:#E8F0FE; color:#2563EB"><svg class="ico"><use href="#i-globe"/></svg></span>
+        <div class="tx"><b>Visitou a landing page “Demonstração”</b><span>Origem: anúncio no Instagram</span></div>
+        <span class="when">03/11 · 09:14</span>
+      </div>
+      <div class="ev">
+        <span class="dot" style="background:var(--green-50); color:var(--green-600)"><svg class="ico"><use href="#i-form"/></svg></span>
+        <div class="tx"><b>Preencheu o formulário e entrou no funil</b><span>Etapa: Novo lead · responsável: Ana Lima</span></div>
+        <span class="when">03/11 · 09:16</span>
+      </div>
+      <div class="ev">
+        <span class="dot" style="background:#FEF3DC; color:#B7791F"><svg class="ico"><use href="#i-mail"/></svg></span>
+        <div class="tx"><b>Abriu o e-mail “Como funciona o Beeno” 3x</b><span>Fluxo de nutrição · clicou em “ver planos”</span></div>
+        <span class="when">05/11 · 18:40</span>
+      </div>
+      <div class="ev">
+        <span class="dot" style="background:var(--green-50); color:var(--green-600)"><svg class="ico"><use href="#i-phone"/></svg></span>
+        <div class="tx"><b>Ligação de 6 min · gravada</b>
+          <div class="wave">
+            <span class="play"><svg width="16" height="16" color="#0A1C15"><use href="#i-play"/></svg></span>
+            <span id="wave" style="display:flex; align-items:center; gap:4px"></span>
+          </div>
+        </div>
+        <span class="when">06/11 · 10:02</span>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span><b>beeno</b>.ai</span><span>Por dentro do Beeno · 3/6</span></div>
+</section>
+
+<!-- ============ 4. CADÊNCIA ============ -->
+<section class="slide" id="s4" style="--gx:-480px; --gy:-420px">
+  <img class="logo" src="../../assets/brand/beeno-logo-dark-bg.svg" alt="beeno">
+  <div class="dash"></div>
+  <div style="left:80px; top:190px; width:920px;">
+    <div class="eyebrow" style="margin-bottom:30px"><span class="n">3</span>Cadências</div>
+    <div class="h2">Nenhum lead <span class="g">esfria esquecido.</span></div>
+    <p class="body" style="margin-top:26px; width:900px">E-mail e ligação alternados no tempo certo. <b>O vendedor abre a lista do dia e executa.</b></p>
+  </div>
+  <div class="win" style="left:80px; top:540px; width:800px; zoom:1.15;">
+    <div class="win-bar">
+      <div class="bi"><svg fill="#fff"><use href="#b"/></svg></div>
+      <span>Cadência</span><span class="crumb">/ Prospecção outbound</span>
+      <span class="sp"></span><span class="chip green" style="font-size:17px">● Ativa</span>
+    </div>
+    <div class="cad">
+      <div class="step done">
+        <div class="day">Dia<b>1</b></div>
+        <span class="dot" style="background:#FEF3DC; color:#B7791F"><svg class="ico"><use href="#i-mail"/></svg></span>
+        <div class="tx"><b>E-mail · Apresentação</b><span>Enviado automaticamente</span></div>
+        <svg width="28" height="28" color="#00A973"><use href="#i-check"/></svg>
+      </div>
+      <div class="step done">
+        <div class="day">Dia<b>3</b></div>
+        <span class="dot" style="background:var(--green-50); color:var(--green-600)"><svg class="ico"><use href="#i-phone"/></svg></span>
+        <div class="tx"><b>Ligação · Primeiro contato</b><span>Realizada · 4 min</span></div>
+        <svg width="28" height="28" color="#00A973"><use href="#i-check"/></svg>
+      </div>
+      <div class="step now">
+        <div class="day">Dia<b>5</b></div>
+        <span class="dot" style="background:#FEF3DC; color:#B7791F"><svg class="ico"><use href="#i-mail"/></svg></span>
+        <div class="tx"><b>E-mail · Case do seu setor</b><span>Agendado para hoje, 14:00</span></div>
+        <span class="chip green" style="font-size:16px">Hoje</span>
+      </div>
+      <div class="step">
+        <div class="day">Dia<b>8</b></div>
+        <span class="dot" style="background:var(--green-50); color:var(--green-600)"><svg class="ico"><use href="#i-phone"/></svg></span>
+        <div class="tx"><b>Ligação · Follow-up</b><span>Entra na lista do vendedor</span></div>
+        <svg width="26" height="26" color="#A9B6B0"><use href="#i-clock"/></svg>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span><b>beeno</b>.ai</span><span>Por dentro do Beeno · 4/6</span></div>
+</section>
+
+<!-- ============ 5. MARKETING ============ -->
+<section class="slide" id="s5" style="--gx:480px; --gy:600px">
+  <img class="logo" src="../../assets/brand/beeno-logo-dark-bg.svg" alt="beeno">
+  <div class="dash"></div>
+  <div style="left:80px; top:190px; width:920px;">
+    <div class="eyebrow" style="margin-bottom:30px"><span class="n">4</span>Marketing integrado</div>
+    <div class="h2">Marketing que já<br><span class="g">entrega no funil.</span></div>
+    <p class="body" style="margin-top:26px; width:900px">Landing page sem código e e-mail marketing ligados ao CRM.<br><b>O lead chega com origem e histórico.</b></p>
+  </div>
+
+  <div class="win" style="left:80px; top:630px; width:470px;">
+    <div class="lp-top"><i></i><i></i><i></i><span class="url">suaempresa.com/demo</span></div>
+    <div class="lp">
+      <span class="chip green" style="margin-bottom:16px">Landing page</span>
+      <h4>Veja o sistema funcionando em 20 minutos</h4>
+      <p>Agende uma demonstração com nosso time.</p>
+      <div class="fld">Mariana Costa</div>
+      <div class="fld">mariana@grupoatlas.com.br</div>
+      <div class="fld ph">Tamanho do time comercial</div>
+      <span class="btn">Quero uma demonstração</span>
+    </div>
+  </div>
+
+  <div style="left:568px; top:870px; width:56px; height:56px; border-radius:50%; background:var(--green); display:grid; place-items:center; z-index:2; box-shadow:0 10px 30px rgba(0,0,0,.4)">
+    <svg width="28" height="28" color="#0A1C15"><use href="#i-arrow"/></svg>
+  </div>
+
+  <div style="left:640px; top:710px; width:360px;">
+    <div class="win" style="padding:22px 22px 20px; margin-bottom:22px;">
+      <div style="display:flex; align-items:center; gap:10px; font-size:16px; font-weight:700; color:var(--ui-muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:14px">
+        <svg class="ico" color="#00A973"><use href="#i-funnel"/></svg>Funil · Novo lead
+      </div>
+      <div class="card drag" style="transform:none; margin:0; box-shadow:0 14px 30px rgba(0,80,50,.18)">
+        <div class="t">Grupo Atlas</div><div class="v">Mariana Costa</div>
+        <div class="r"><span class="chip blue">Origem: LP Demo</span><span class="av" style="background:#F97316">AL</span></div>
+      </div>
+    </div>
+    <div class="win" style="padding:20px 22px;">
+      <div style="display:flex; align-items:center; gap:14px">
+        <span class="dot" style="width:46px; height:46px; border-radius:12px; display:grid; place-items:center; background:#FEF3DC; color:#B7791F"><svg class="ico"><use href="#i-mail"/></svg></span>
+        <div><b style="font-size:19px; display:block">Fluxo “Nutrição” iniciado</b><span style="font-size:16px; color:var(--ui-muted)">1º e-mail sai em 5 min</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span><b>beeno</b>.ai</span><span>Por dentro do Beeno · 5/6</span></div>
+</section>
+
+<!-- ============ 6. CTA ============ -->
+<section class="slide" id="s6" style="--gx:300px; --gy:-460px">
+  <img class="logo" src="../../assets/brand/beeno-logo-dark-bg.svg" alt="beeno">
+  <div class="dash"></div>
+  <svg class="bmark" style="right:-110px; bottom:-60px; width:620px; height:790px"><use href="#b"/></svg>
+
+  <div style="left:80px; top:330px; width:920px;">
+    <div class="h1"><span class="light">Vendas e marketing</span><br><span class="hl">realmente integrados.</span></div>
+    <p class="body" style="margin-top:40px; width:820px">Funil, e-mail marketing, landing pages, cadências e ligações <b>na mesma plataforma.</b></p>
+    <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:44px; width:940px">
+      <span class="chip" style="font-size:20px; padding:9px 16px; border:1.5px solid rgba(0,205,138,.5); color:#fff"><svg class="ico" color="#00CD8A"><use href="#i-funnel"/></svg>Funil</span>
+      <span class="chip" style="font-size:20px; padding:9px 16px; border:1.5px solid rgba(0,205,138,.5); color:#fff"><svg class="ico" color="#00CD8A"><use href="#i-mail"/></svg>E-mail marketing</span>
+      <span class="chip" style="font-size:20px; padding:9px 16px; border:1.5px solid rgba(0,205,138,.5); color:#fff"><svg class="ico" color="#00CD8A"><use href="#i-globe"/></svg>Landing pages</span>
+      <span class="chip" style="font-size:20px; padding:9px 16px; border:1.5px solid rgba(0,205,138,.5); color:#fff"><svg class="ico" color="#00CD8A"><use href="#i-clock"/></svg>Cadências</span>
+      <span class="chip" style="font-size:20px; padding:9px 16px; border:1.5px solid rgba(0,205,138,.5); color:#fff"><svg class="ico" color="#00CD8A"><use href="#i-phone"/></svg>Ligações</span>
+    </div>
+  </div>
+
+  <div style="left:80px; top:1010px; display:flex; align-items:center; gap:22px;">
+    <span style="display:inline-flex; align-items:center; gap:16px; background:var(--green); color:var(--ink); font-weight:700; font-size:30px; border-radius:18px; padding:24px 34px;">
+      Agende uma demonstração gratuita
+      <svg width="30" height="30" color="#0A1C15"><use href="#i-arrow"/></svg>
+    </span>
+  </div>
+  <div style="left:80px; top:1124px; font-size:24px; color:var(--muted)">Link na bio · <span style="color:#fff">bioinsta.beeno.ai</span></div>
+  <div class="foot"><span><b>beeno</b>.ai</span><span>Por dentro do Beeno · 6/6</span></div>
+</section>
+
+<script>
+  // kanban nos slides 1 e 2
+  document.querySelectorAll('.win.kanban').forEach(el =>
+    el.appendChild(document.getElementById('kanban').content.cloneNode(true)));
+  // forma de onda da ligação
+  const w = document.getElementById('wave');
+  const hs = [10,18,26,14,30,22,12,28,34,20,16,26,12,22,30,18,10,24,32,16,12,20,28,14,22,10,18,26,12,8];
+  hs.forEach((h, i) => { const b = document.createElement('i'); b.style.height = h + 'px'; if (i < 11) b.className = 'on'; w.appendChild(b); });
+</script>
+</body>
+</html>
