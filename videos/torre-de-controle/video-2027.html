@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Plano de voo 2027</title>
+<!--
+  "Plano de voo 2027": filme reflexivo de fim de ano. Planos naturalistas (Seedream 5.0 Pro + Seedance 2.5)
+  em clips-2027/, motion graphics do Beeno feitos aqui (mapa de rota, painel do Beeno, encerramento),
+  legendas da locução do Vitor (LOCUCAO-plano-de-voo-2027.md). Os tempos das legendas são provisórios
+  até a locução chegar.
+  Render: node videos/torre-de-controle/render.js --html video-2027.html --clips clips-2027 --grain 4 --out BEENO-PLANO-DE-VOO-2027.mp4
+-->
+<style>
+@font-face { font-family: "ID"; font-weight: 300; src: url("../../assets/fonts/InterDisplay-Light.otf"); }
+@font-face { font-family: "ID"; font-weight: 400; src: url("../../assets/fonts/InterDisplay-Regular.otf"); }
+@font-face { font-family: "ID"; font-weight: 500; src: url("../../assets/fonts/InterDisplay-Medium.otf"); }
+@font-face { font-family: "ID"; font-weight: 600; src: url("../../assets/fonts/InterDisplay-SemiBold.otf"); }
+@font-face { font-family: "ID"; font-weight: 700; src: url("../../assets/fonts/InterDisplay-Bold.otf"); }
+@font-face { font-family: "P"; font-weight: 500; src: url("../../assets/fonts/Poppins-Medium.ttf"); }
+@font-face { font-family: "P"; font-weight: 600; src: url("../../assets/fonts/Poppins-SemiBold.ttf"); }
+:root { --green:#00CD8A; --green2:#00A973; --ink:#0A1C15; --bg:#0A1712; --muted:#8FA39A; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+body { font-family: "ID", sans-serif; color: #fff; -webkit-font-smoothing: antialiased; }
+#stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+.layer { position: absolute; inset: 0; display: none; overflow: hidden; }
+.on { display: block; }
+#bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+#shade { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0) 58%, rgba(0,0,0,.42) 76%, rgba(0,0,0,.62) 100%); }
+
+/* legenda da locução */
+#sub { position: absolute; left: 90px; right: 90px; top: 1420px; text-align: center; font-weight: 500; font-size: 44px; line-height: 1.3;
+  letter-spacing: -.005em; text-shadow: 0 2px 16px rgba(0,0,0,.55); opacity: 0; }
+#sub b { color: var(--green); font-weight: 600; }
+
+/* fundos motion */
+.mg { background: var(--bg); }
+.mg .glow { position: absolute; width: 1500px; height: 1500px; border-radius: 50%; left: -210px; top: -300px;
+  background: radial-gradient(circle, rgba(0,170,110,.30) 0%, rgba(0,120,80,.10) 42%, rgba(0,0,0,0) 70%); }
+.grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(143,163,154,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(143,163,154,.07) 1px, transparent 1px);
+  background-size: 90px 90px; }
+.kick { font-family: "ID"; font-weight: 600; font-size: 24px; letter-spacing: .32em; color: var(--muted); text-transform: uppercase; }
+
+/* mapa */
+#map svg { position: absolute; inset: 0; }
+#map .wp { position: absolute; transform: translate(-50%, -50%); text-align: center; opacity: 0; }
+#map .wp i { display: block; width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--green); margin: 0 auto 14px; background: var(--bg); }
+#map .wp b { display: block; font-size: 64px; font-weight: 700; letter-spacing: -.02em; }
+#map .wp span { font-size: 22px; letter-spacing: .24em; color: var(--muted); }
+#plane { position: absolute; width: 54px; height: 54px; margin: -27px 0 0 -27px; opacity: 0; }
+
+/* painel beeno */
+#beeno .logo { position: absolute; left: 50%; width: 460px; margin-left: -230px; }
+#beeno .tag { position: absolute; left: 0; right: 0; text-align: center; }
+.card { position: absolute; left: 150px; right: 150px; background: #fff; color: #12241C; border-radius: 20px; padding: 26px 30px; opacity: 0;
+  box-shadow: 0 30px 70px rgba(0,0,0,.45); font-family: "P", sans-serif; }
+.card .k { font-size: 17px; font-weight: 600; letter-spacing: .18em; color: #00A973; margin-bottom: 10px; }
+.card .t { font-size: 32px; font-weight: 600; }
+.card .s { font-size: 21px; color: #6B7C74; margin-top: 4px; font-family: "P"; font-weight: 500; }
+.card .chip { position: absolute; right: 26px; top: 26px; font-size: 18px; font-weight: 600; padding: 6px 14px; border-radius: 999px; background: #E6FAF3; color: #00A973; }
+#route { position: absolute; inset: 0; }
+.dot { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 8px rgba(0,205,138,.18); opacity: 0; }
+.lane { position: absolute; font-size: 22px; letter-spacing: .24em; color: var(--muted); font-weight: 600; opacity: 0; }
+
+/* cartela */
+#card .big { position: absolute; left: 80px; right: 80px; top: 820px; text-align: center; font-size: 76px; font-weight: 300; letter-spacing: -.02em; line-height: 1.15; opacity: 0; }
+#card .big b { font-weight: 700; color: var(--green); }
+
+/* encerramento */
+#end .logo { position: absolute; left: 50%; top: 660px; width: 520px; margin-left: -260px; opacity: 0; }
+#end .a { position: absolute; left: 100px; right: 100px; top: 960px; text-align: center; font-size: 50px; font-weight: 300; line-height: 1.25; opacity: 0; }
+#end .a b { font-weight: 700; color: var(--green); }
+#end .cta { position: absolute; left: 0; right: 0; top: 1220px; text-align: center; opacity: 0; }
+#end .cta span { display: inline-block; border: 2px solid var(--green); border-radius: 18px; padding: 22px 38px; font-size: 32px; font-weight: 600; }
+#end .cta small { display: block; margin-top: 20px; font-size: 26px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="layer" id="video"><img id="bg" alt=""><div id="shade"></div></div>
+
+  <!-- mapa: plano de voo 2026 → 2027 -->
+  <div class="layer mg" id="map">
+    <div class="glow"></div><div class="grid"></div>
+    <svg width="1080" height="1920" viewBox="0 0 1080 1920" id="mapsvg"></svg>
+    <div class="kick" style="position:absolute;left:0;right:0;top:250px;text-align:center" id="mapk">Plano de voo</div>
+    <div class="wp" id="wpa" style="left:230px;top:1080px"><i></i><b>2026</b><span>ORIGEM</span></div>
+    <div class="wp" id="wpb" style="left:850px;top:520px"><i></i><b>2027</b><span>DESTINO</span></div>
+    <svg id="plane" viewBox="0 0 24 24"><path fill="#00CD8A" d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>
+  </div>
+
+  <!-- cartela preta -->
+  <div class="layer" id="card" style="background:#000"><div class="big" id="bigtxt"></div></div>
+
+  <!-- painel Beeno -->
+  <div class="layer mg" id="beeno">
+    <div class="glow"></div><div class="grid"></div>
+    <svg id="route" width="1080" height="1920" viewBox="0 0 1080 1920"></svg>
+    <img class="logo" id="blogo" src="../../assets/brand/beeno-logo-dark-bg.svg" alt="beeno">
+    <div class="tag kick" id="btag">Torre de controle</div>
+    <div class="lane" id="lane1" style="left:150px;top:520px">MARKETING</div>
+    <div class="lane" id="lane2" style="right:150px;top:520px">VENDAS</div>
+    <div class="card" id="c1" style="top:640px"><div class="k">CONTATO</div><div class="t">Mariana Costa</div><div class="s">Diretora comercial · Grupo Atlas</div><span class="chip">Origem: site</span></div>
+    <div class="card" id="c2" style="top:880px"><div class="k">NEGÓCIO</div><div class="t">Grupo Atlas · R$ 48.000</div><div class="s">Etapa: Proposta · Ana Lima</div><span class="chip">Em dia</span></div>
+    <div class="card" id="c3" style="top:1120px"><div class="k">PRÓXIMO PASSO</div><div class="t">Reunião de fechamento</div><div class="s">Qui, 08/01 · 10h</div><span class="chip">Agendado</span></div>
+    <div class="dot" id="d1" style="left:120px;top:715px"></div><div class="dot" id="d2" style="left:120px;top:955px"></div><div class="dot" id="d3" style="left:120px;top:1195px"></div>
+  </div>
+
+  <!-- encerramento -->
+  <div class="layer mg" id="end">
+    <div class="glow"></div>
+    <img class="logo" src="../../assets/brand/beeno-logo-dark-bg.svg" alt="beeno">
+    <div class="a">A torre de controle da sua<br><b>operação comercial.</b></div>
+    <div class="cta"><span>Comece 2027 com a rota definida</span><small>Agende uma demonstração · link na bio</small></div>
+  </div>
+
+  <div id="sub"></div>
+</div>
+
+<script>
+const FPS = 30;
+// Linha do tempo. Legendas: [início, fim, texto] em segundos relativos ao plano.
+const SCENES = [
+  { src: 'n21', off: 0.4, dur: 4.5, subs: [[0.3, 4.4, 'Todo fim de ano, toda empresa faz a mesma coisa.']] },
+  { kind: 'map', dur: 4.6, subs: [[0.1, 4.5, 'Olha para trás… e traça o <b>plano de voo</b> do ano seguinte.']] },
+  { src: 's01', off: 0.4, dur: 3.4, subs: [[0.1, 3.3, 'E, olhando para 2026, muita empresa voou <b>sem enxergar a rota.</b>']] },
+  { src: 's02', off: 0.4, dur: 2.6, subs: [[0.1, 2.5, 'Meta definida no feeling.']] },
+  { src: 's05', off: 0.4, dur: 3.2, subs: [[0.1, 3.1, 'Informação espalhada em planilhas, mensagens… e na cabeça de cada um.']] },
+  { src: 's04', off: 0.3, dur: 2.8, subs: [[0.1, 2.7, 'Decisões tomadas com o <b>dado de ontem.</b>']] },
+  { src: 's03', off: 0.6, dur: 2.6 },
+  { src: 's06', off: 0.4, dur: 3.0, subs: [[0.3, 2.9, 'Ninguém voa às cegas por escolha.']] },
+  { kind: 'card', dur: 2.2, big: 'Voa porque<br><b>falta visão.</b>' },
+  { src: 'n22', off: 0.4, dur: 5.6, subs: [[0.2, 2.9, 'Todo voo seguro tem uma coisa em comum:'], [3.0, 5.5, 'alguém que enxerga o todo. <b>Uma torre de controle.</b>']] },
+  { kind: 'beeno', dur: 11.0, subs: [[0.3, 2.6, 'Em vendas, essa torre é o <b>Beeno.</b>'], [2.8, 7.6, 'Cada contato, cada negócio, cada próximo passo… na mesma tela, em tempo real.'], [7.8, 10.9, 'Vendas e marketing olhando para <b>a mesma rota.</b>']] },
+  { src: 'n24', off: 0.3, dur: 3.6, subs: [[0.2, 3.5, '2027 não precisa ser um ano de mais esforço.']] },
+  { src: 'n25', off: 0.4, dur: 3.2, subs: [[0.1, 3.1, 'Precisa ser um ano de <b>mais visão.</b>']] },
+  { src: 's10', off: 1.4, dur: 3.0, subs: [[0.1, 2.9, 'Planeje a rota. Acompanhe cada etapa.']] },
+  { src: 'n23', off: 0.3, dur: 3.4, subs: [[0.2, 3.3, 'E chegue ao <b>destino.</b>']] },
+  { src: 's12', off: 0.4, dur: 3.0 },
+  { kind: 'end', dur: 6.0, subs: [[0.6, 5.8, 'Beeno. A torre de controle da sua operação comercial.']], hideSubs: true },
+];
+let acc = 0; for (const s of SCENES) { s.start = acc; acc += s.dur; }
+window.TOTAL = acc;
+
+const $ = id => document.getElementById(id);
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => 1 - Math.pow(1 - clamp(x), 3);
+const inout = x => { x = clamp(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const ramp = (t, a, d) => ease((t - a) / d);
+function show(el, k, dy = 24) { el.style.opacity = k; el.style.transform = `translateY(${(1 - k) * dy}px)`; }
+
+// ---------- mapa
+const P0 = [230, 1080], P1 = [850, 520], C1 = [300, 680], C2 = [700, 960];
+function bez(t) { const u = 1 - t; return [0, 1].map(i => u*u*u*P0[i] + 3*u*u*t*C1[i] + 3*u*t*t*C2[i] + t*t*t*P1[i]); }
+(function buildMap() {
+  let s = '';
+  // curvas de nível suaves, como numa carta aeronáutica
+  for (let k = 0; k < 7; k++) {
+    let d = ''; for (let x = -40; x <= 1120; x += 40) { const y = 380 + k * 190 + 60 * Math.sin(x / 210 + k * 1.3) + 28 * Math.sin(x / 90 + k); d += (x < 0 ? 'M' : 'L') + x + ',' + y.toFixed(1); }
+    s += `<path d="${d}" fill="none" stroke="rgba(0,205,138,.10)" stroke-width="2"/>`;
+  }
+  s += `<path id="rt" d="M${P0} C${C1} ${C2} ${P1}" fill="none" stroke="#00CD8A" stroke-width="4" stroke-dasharray="14 12" stroke-linecap="round"/>`;
+  $('mapsvg').innerHTML = s;
+})();
+function drawMap(t) {
+  show($('mapk'), ramp(t, 0.1, 0.6));
+  show($('wpa'), ramp(t, 0.3, 0.6));
+  const rt = document.getElementById('rt'), L = rt.getTotalLength(), k = inout((t - 0.8) / 2.6);
+  rt.style.strokeDashoffset = 0; rt.setAttribute('stroke-dasharray', `14 12`);
+  rt.style.clipPath = 'none';
+  rt.style.opacity = 1; rt.setAttribute('mask', '');
+  rt.style.strokeDasharray = `${L * k} ${L}`;
+  const p = $('plane'); p.style.opacity = t > 0.8 && k < 1 ? 1 : (k >= 1 ? 1 : 0);
+  const [x, y] = bez(k), [x2, y2] = bez(Math.min(1, k + 0.01));
+  p.style.left = x + 'px'; p.style.top = y + 'px'; p.style.transform = `rotate(${Math.atan2(y2 - y, x2 - x) * 180 / Math.PI + 90}deg)`;
+  show($('wpb'), ramp(t, 3.0, 0.6));
+}
+
+// ---------- painel beeno
+function drawBeeno(t) {
+  const lg = $('blogo'), tg = $('btag');
+  const up = inout((t - 2.2) / 0.9);                // logo sobe para dar lugar aos cartões
+  const k0 = ramp(t, 0.2, 0.8);
+  lg.style.opacity = k0; lg.style.top = (760 - 520 * up) + 'px'; lg.style.transform = `scale(${(0.94 + 0.06 * k0) * (1 - 0.35 * up)})`;
+  tg.style.opacity = ramp(t, 0.8, 0.6) * (1 - up); tg.style.top = (980 - 520 * up) + 'px';
+  // rota verde descendo pelos cartões
+  const rk = inout((t - 2.8) / 4.2);
+  const y0 = 600, y1 = 1300;
+  $('route').innerHTML = `<line x1="120" y1="${y0}" x2="120" y2="${y0 + (y1 - y0) * rk}" stroke="#00CD8A" stroke-width="4" stroke-dasharray="14 12" stroke-linecap="round"/>`;
+  [['c1', 'd1', 3.0], ['c2', 'd2', 4.4], ['c3', 'd3', 5.8]].forEach(([c, d, a]) => {
+    const k = ramp(t, a, 0.6); const el = $(c);
+    el.style.opacity = k * (1 - ramp(t, 9.8, 0.6) * 0); el.style.transform = `translateX(${(1 - k) * 60}px)`;
+    $(d).style.opacity = ramp(t, a - 0.1, 0.3);
+  });
+  // marketing e vendas convergem para a mesma rota
+  const lk = 0;
+  $('lane1').style.opacity = lk; $('lane2').style.opacity = lk;
+  if (lk > 0) {
+    const m = inout((t - 7.9) / 1.4);
+    $('route').innerHTML += `<path d="M230,560 Q230,${590 + 0 * m} 120,${600}" fill="none" stroke="rgba(0,205,138,${.9 * lk})" stroke-width="4" stroke-dasharray="${380 * m} 400"/>
+      <path d="M850,560 Q850,600 120,600" fill="none" stroke="rgba(0,205,138,${.9 * lk})" stroke-width="4" stroke-dasharray="${900 * m} 900"/>`;
+  }
+}
+
+function drawEnd(t) {
+  const lg = document.querySelector('#end .logo'), k = ramp(t, 0.2, 0.9);
+  lg.style.opacity = k; lg.style.transform = `scale(${0.94 + 0.06 * k})`;
+  show(document.querySelector('#end .a'), ramp(t, 1.0, 0.7));
+  show(document.querySelector('#end .cta'), ramp(t, 1.9, 0.7));
+}
+
+window.seek = async function (T) {
+  const s = SCENES.find(x => T >= x.start && T < x.start + x.dur) || SCENES[SCENES.length - 1];
+  const t = T - s.start;
+  for (const id of ['video', 'map', 'card', 'beeno', 'end']) $(id).classList.remove('on');
+  const sub = $('sub'); sub.style.opacity = 0;
+  if (s.kind === 'map') { $('map').classList.add('on'); drawMap(t); }
+  else if (s.kind === 'beeno') { $('beeno').classList.add('on'); drawBeeno(t); }
+  else if (s.kind === 'end') { $('end').classList.add('on'); drawEnd(t); }
+  else if (s.kind === 'card') { $('card').classList.add('on'); const b = $('bigtxt'); b.innerHTML = s.big; show(b, ramp(t, 0.15, 0.6), 16); }
+  else {
+    $('video').classList.add('on');
+    const n = Math.floor((s.off + t) * FPS) + 1;
+    const img = $('bg'), src = `frames/clips-2027/${s.src}/${String(n).padStart(4, '0')}.jpg`;
+    if (!img.src.endsWith(src)) { img.src = src; await img.decode().catch(() => {}); }
+  }
+  if (s.subs && !s.hideSubs) for (const [a, b, txt] of s.subs) if (t >= a && t < b) {
+    sub.innerHTML = txt; sub.style.opacity = Math.min(ramp(t, a, 0.25), 1 - ramp(t, b - 0.25, 0.25));
+  }
+};
+</script>
+</body>
+</html>
