@@ -295,7 +295,7 @@ window.seek = async function (T) {
   if (s.kind === 'video') {
     $('video').classList.add('on');
     const n = Math.floor((s.off + t) * FPS) + 1;
-    const img = $('bg'); const src = `frames/${s.src}/${String(n).padStart(4, '0')}.jpg`;
+    const img = $('bg'); const src = `frames/clips/${s.src}/${String(n).padStart(4, '0')}.jpg`;
     if (!img.src.endsWith(src)) { img.src = src; await img.decode().catch(() => {}); }
     // "assentada" curta no corte
     const k = ramp(t, 0, 0.25); img.style.transform = `scale(${1.04 - 0.04 * k})`;

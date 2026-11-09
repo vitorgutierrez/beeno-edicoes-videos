@@ -10,15 +10,19 @@ const DIR = __dirname;
 const ROOT = path.resolve(DIR, '../..');
 const args = process.argv.slice(2);
 const opt = k => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
+const HTML = opt('--html') || 'video.html';
+const CLIPS = opt('--clips') || 'clips';
+const OUT = opt('--out') || 'BEENO-TORRE-DE-CONTROLE.mp4';
+const GRAIN = opt('--grain') || '0';
 
 function extractFrames() {
-  for (const f of fs.readdirSync(path.join(DIR, 'clips')).filter(f => /^cena\d+\.mp4$/.test(f))) {
-    const name = f.replace('.mp4', ''), out = path.join(DIR, 'frames', name);
-    const src = path.join(DIR, 'clips', f);
+  for (const f of fs.readdirSync(path.join(DIR, CLIPS)).filter(f => /\.mp4$/.test(f))) {
+    const name = f.replace('.mp4', ''), out = path.join(DIR, 'frames', CLIPS, name);
+    const src = path.join(DIR, CLIPS, f);
     if (fs.existsSync(out) && fs.statSync(out).mtimeMs > fs.statSync(src).mtimeMs) continue;
     fs.rmSync(out, { recursive: true, force: true }); fs.mkdirSync(out, { recursive: true });
     execFileSync('ffmpeg', ['-v', 'error', '-i', src, '-vf',
-      'fps=30,scale=1080:1920:flags=lanczos,unsharp=5:5:0.6', '-q:v', '2', path.join(out, '%04d.jpg')]);
+      `fps=30,scale=1080:1920:flags=lanczos,unsharp=5:5:0.5${+GRAIN ? `,noise=alls=${GRAIN}:allf=t` : ''}`, '-q:v', '2', path.join(out, '%04d.jpg')]);
     console.log('quadros:', name);
   }
 }
@@ -27,7 +31,7 @@ function extractFrames() {
   extractFrames();
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
-  await page.goto('file://' + path.join(DIR, 'video.html'));
+  await page.goto('file://' + path.join(DIR, HTML));
   await page.evaluate(() => document.fonts.ready);
   const total = await page.evaluate(() => window.TOTAL);
 
@@ -50,7 +54,7 @@ function extractFrames() {
   }
   await browser.close();
 
-  const out = path.join(ROOT, 'output', 'BEENO-TORRE-DE-CONTROLE.mp4');
+  const out = path.join(ROOT, 'output', OUT);
   const music = opt('--music');
   const ff = ['-v', 'error', '-y', '-framerate', '30', '-i', path.join(fr, '%05d.jpg')];
   if (music) ff.push('-i', music, '-filter_complex', `[1:a]afade=t=in:d=0.5,afade=t=out:st=${(total - 1.5).toFixed(2)}:d=1.5,loudnorm=I=-14[a]`, '-map', '0:v', '-map', '[a]', '-c:a', 'aac', '-b:a', '192k', '-shortest');

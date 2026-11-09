@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Torre de controle v3</title>
+<!--
+  Corte naturalista (método "Fukushima"): planos Seedream 5.0 Pro + Seedance 2.5 em clips-v3/,
+  texto em duas partes, corte seco, um respiro preto antes da virada, logo e CTA no fim.
+  Telas do Beeno podem ser aplicadas por cima dos monitores (overlay com perspectiva, ver QUAD).
+  Render: node videos/torre-de-controle/render.js --html video-v3.html --clips clips-v3 --out BEENO-TORRE-DE-CONTROLE-v3.mp4 --grain 5
+-->
+<style>
+@font-face { font-family: "ID"; font-weight: 300; src: url("../../assets/fonts/InterDisplay-Light.otf"); }
+@font-face { font-family: "ID"; font-weight: 600; src: url("../../assets/fonts/InterDisplay-SemiBold.otf"); }
+@font-face { font-family: "ID"; font-weight: 700; src: url("../../assets/fonts/InterDisplay-Bold.otf"); }
+:root { --green:#00CD8A; --ink:#0A1C15; --bg:#0B1A14; --muted:#96A59E; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+body { font-family: "ID", sans-serif; color: #fff; -webkit-font-smoothing: antialiased; }
+#stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+.layer { position: absolute; inset: 0; display: none; }
+.on { display: block; }
+#bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+#ov { position: absolute; left: 0; top: 0; transform-origin: 0 0; display: none; }
+#shade { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0) 52%, rgba(0,0,0,.45) 70%, rgba(0,0,0,.7) 100%); }
+#caption { position: absolute; left: 84px; right: 84px; top: 1300px; }
+#caption div { opacity: 0; text-shadow: 0 2px 18px rgba(0,0,0,.45); }
+#caption .l1 { font-weight: 300; font-size: 60px; line-height: 1.12; letter-spacing: -.02em; }
+#caption .l2 { font-weight: 700; font-size: 68px; line-height: 1.1; letter-spacing: -.025em; color: var(--green); margin-top: 4px; }
+
+#end { background: var(--bg); }
+#end::before { content: ""; position: absolute; width: 1400px; height: 1400px; border-radius: 50%; left: -160px; top: -380px;
+  background: radial-gradient(circle, rgba(0,160,105,.36) 0%, rgba(0,120,80,.12) 42%, rgba(0,0,0,0) 70%); }
+#end .logo { position: absolute; left: 50%; top: 640px; width: 520px; margin-left: -260px; opacity: 0; }
+#end .tag { position: absolute; left: 80px; right: 80px; top: 980px; text-align: center; }
+#end .a { font-weight: 300; font-size: 62px; letter-spacing: -.02em; opacity: 0; }
+#end .b { display: inline-block; margin-top: 10px; font-weight: 700; font-size: 70px; letter-spacing: -.025em; background: var(--green); color: var(--ink); padding: 0 16px 4px; opacity: 0; }
+#end .cta { position: absolute; left: 0; right: 0; top: 1290px; text-align: center; opacity: 0; }
+#end .cta span { display: inline-block; border: 2px solid var(--green); border-radius: 18px; padding: 22px 36px; font-size: 34px; font-weight: 600; }
+#end .cta small { display: block; margin-top: 20px; font-size: 26px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="layer" id="video"><img id="bg" alt=""><img id="ov" alt=""><div id="shade"></div></div>
+  <div class="layer" id="black"></div>
+  <div class="layer" id="end">
+    <img class="logo" src="../../assets/brand/beeno-logo-dark-bg.svg" alt="beeno">
+    <div class="tag"><div class="a">Vendas e marketing</div><div class="b">realmente integrados.</div></div>
+    <div class="cta"><span>Agende uma demonstração</span><small>Link na bio</small></div>
+  </div>
+  <div id="caption"><div class="l1"></div><div class="l2"></div></div>
+</div>
+<script>
+const FPS = 30;
+// src: clipe em clips-v3; off: segundo do clipe onde o plano começa; dur: duração no corte.
+// ov (opcional): tela do Beeno aplicada por cima de um monitor { img, quad: [[x,y] x4 em px 1080x1920, sentido horário a partir do canto sup. esq.], opacity }
+const SCENES = [
+  { src: 's01', off: 0.6, dur: 2.8, l1: 'Toda venda', l2: 'é um voo.' },
+  { src: 's02', off: 0.5, dur: 2.8, l1: 'O vendedor', l2: 'pilota.' },
+  { src: 's03', off: 0.4, dur: 3.0, l1: 'E o gestor', l2: 'é a torre.' },
+  { src: 's04', off: 0.3, dur: 2.6, l1: 'Mas o radar dele', l2: 'mostra o passado.' },
+  { src: 's05', off: 0.5, dur: 2.4, l1: 'Informação de ontem', l2: 'para decidir hoje.' },
+  { src: 's06', off: 0.4, dur: 3.0, l1: 'Dois vendedores.', l2: 'O mesmo cliente.' },
+  { kind: 'black', dur: 0.6 },
+  { src: 's07', off: 0.3, dur: 3.2, l1: 'Até a torre', l2: 'ligar o Beeno.' },
+  { src: 's08', off: 0.4, dur: 3.2, l1: 'Cada negócio', l2: 'em tempo real.' },
+  { src: 's09', off: 0.5, dur: 3.0, l1: 'E o piloto', l2: 'vê a mesma rota.' },
+  { src: 's10', off: 1.4, dur: 3.0, l1: 'Previsão', l2: 'no lugar do feeling.' },
+  { src: 's11', off: 0.3, dur: 3.4, l1: 'Negócio com rota', l2: 'chega ao destino.' },
+  { src: 's12', off: 0.4, dur: 3.2 },
+  { kind: 'end', dur: 4.6 },
+];
+let acc = 0; for (const s of SCENES) { s.start = acc; acc += s.dur; }
+window.TOTAL = acc;
+
+const $ = id => document.getElementById(id);
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => 1 - Math.pow(1 - clamp(x), 3);
+const ramp = (t, a, d) => ease((t - a) / d);
+function rise(el, t, a, dist = 22) { const k = ramp(t, a, 0.5); el.style.opacity = k; el.style.transform = `translateY(${(1 - k) * dist}px)`; }
+
+// matriz de perspectiva (quad de destino) para aplicar telas sobre monitores
+function matrix3d(w, h, q) {
+  const [[x0, y0], [x1, y1], [x2, y2], [x3, y3]] = q;
+  const src = [[0, 0], [w, 0], [w, h], [0, h]], dst = [[x0, y0], [x1, y1], [x2, y2], [x3, y3]];
+  const A = [], B = [];
+  for (let i = 0; i < 4; i++) {
+    const [sx, sy] = src[i], [dx, dy] = dst[i];
+    A.push([sx, sy, 1, 0, 0, 0, -sx * dx, -sy * dx]); B.push(dx);
+    A.push([0, 0, 0, sx, sy, 1, -sx * dy, -sy * dy]); B.push(dy);
+  }
+  for (let c = 0; c < 8; c++) { let p = c; for (let r = c + 1; r < 8; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+    [A[c], A[p]] = [A[p], A[c]]; [B[c], B[p]] = [B[p], B[c]];
+    for (let r = 0; r < 8; r++) if (r !== c) { const f = A[r][c] / A[c][c]; for (let k = c; k < 8; k++) A[r][k] -= f * A[c][k]; B[r] -= f * B[c]; } }
+  const h8 = B.map((b, i) => b / A[i][i]);
+  const [a, b, c, d, e, f, g, hh] = h8;
+  return `matrix3d(${a},${d},0,${g},${b},${e},0,${hh},0,0,1,0,${c},${f},0,1)`;
+}
+
+window.seek = async function (T) {
+  const s = SCENES.find(x => T >= x.start && T < x.start + x.dur) || SCENES[SCENES.length - 1];
+  const t = T - s.start;
+  for (const id of ['video', 'black', 'end']) $(id).classList.remove('on');
+  const l1 = document.querySelector('#caption .l1'), l2 = document.querySelector('#caption .l2');
+  l1.style.opacity = l2.style.opacity = 0;
+  if (s.kind === 'black') { $('black').classList.add('on'); return; }
+  if (s.kind === 'end') {
+    $('end').classList.add('on');
+    const lg = document.querySelector('#end .logo'), k = ramp(t, 0.2, 0.8);
+    lg.style.opacity = k; lg.style.transform = `scale(${0.94 + 0.06 * k})`;
+    rise(document.querySelector('#end .a'), t, 0.9); rise(document.querySelector('#end .b'), t, 1.2); rise(document.querySelector('#end .cta'), t, 1.8);
+    return;
+  }
+  $('video').classList.add('on');
+  const n = Math.floor((s.off + t) * FPS) + 1;
+  const img = $('bg'), src = `frames/clips-v3/${s.src}/${String(n).padStart(4, '0')}.jpg`;
+  if (!img.src.endsWith(src)) { img.src = src; await img.decode().catch(() => {}); }
+  const ov = $('ov');
+  if (s.ov) {
+    if (!ov.src.endsWith(s.ov.img)) { ov.src = s.ov.img; await ov.decode().catch(() => {}); }
+    ov.style.display = 'block'; ov.style.width = ov.naturalWidth + 'px'; ov.style.height = ov.naturalHeight + 'px';
+    ov.style.opacity = s.ov.opacity ?? 0.92; ov.style.filter = s.ov.filter || 'blur(0.4px) contrast(0.92) saturate(0.9)';
+    ov.style.transform = matrix3d(ov.naturalWidth, ov.naturalHeight, s.ov.quad);
+  } else ov.style.display = 'none';
+  if (s.l2) { l1.textContent = s.l1 || ''; l2.textContent = s.l2; if (s.l1) rise(l1, t, 0.2); rise(l2, t, s.l1 ? 0.7 : 0.2); }
+};
+</script>
+</body>
+</html>
