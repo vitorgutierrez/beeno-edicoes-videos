@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Beeno UI kit</title>
+<!--
+  Telas do Beeno recriadas a partir de prints reais, com DADOS FICTÍCIOS (empresas, pessoas, valores).
+  Cada <section class="screen"> vira um PNG 1600x1000 (render-ui.js, @2x) usado como referência nas
+  imagens do storyboard e aplicado por cima dos monitores/painéis nos closes.
+-->
+<style>
+@font-face { font-family: "P"; font-weight: 400; src: url("../../assets/fonts/Poppins-Regular.ttf"); }
+@font-face { font-family: "P"; font-weight: 500; src: url("../../assets/fonts/Poppins-Medium.ttf"); }
+@font-face { font-family: "P"; font-weight: 600; src: url("../../assets/fonts/Poppins-SemiBold.ttf"); }
+@font-face { font-family: "P"; font-weight: 700; src: url("../../assets/fonts/Poppins-Bold.ttf"); }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #333; font-family: "P", sans-serif; color: #1F2430; }
+.screen { position: relative; width: 1600px; height: 1000px; overflow: hidden; background: #000; margin-bottom: 30px; }
+.top { height: 44px; display: flex; align-items: center; gap: 22px; padding: 0 26px 0 18px; color: #fff; font-size: 15px; }
+.top .sp { flex: 1; }
+.top .ic { width: 17px; height: 17px; border: 2px solid #fff; border-radius: 50%; }
+.top .bell { position: relative; } .top .bell b { position: absolute; top: -8px; right: -9px; background: #E5484D; font-size: 9px; border-radius: 7px; padding: 0 4px; }
+.top .acc { border-left: 1px solid #555; padding-left: 20px; }
+.side { position: absolute; left: 0; top: 44px; bottom: 0; width: 46px; display: flex; flex-direction: column; align-items: center; gap: 26px; padding-top: 20px; }
+.side i { display: block; width: 20px; height: 20px; border: 2.2px solid #fff; border-radius: 5px; }
+.side i.r { border-radius: 50%; } .side i.on { border-color: #E5484D; }
+.main { position: absolute; left: 46px; right: 0; top: 44px; bottom: 0; background: #fff; border-top-left-radius: 16px; overflow: hidden; }
+.mark { width: 20px; height: 20px; }
+
+/* kanban */
+.kb-h { display: flex; align-items: center; justify-content: space-between; padding: 18px 26px 0; }
+.kb-h h1 { font-size: 22px; font-weight: 500; }
+.btns { display: flex; gap: 12px; } .btns span { border: 1.5px solid #111; border-radius: 4px; padding: 6px 16px; font-size: 14px; font-weight: 500; }
+.btns span.d { background: #111; color: #fff; }
+.pipe { display: flex; align-items: center; gap: 10px; padding: 8px 26px 0; }
+.pipe .vw { display: flex; } .pipe .vw i { width: 26px; height: 26px; display: grid; place-items: center; border: 1px solid #E1E4E8; font-style: normal; font-size: 12px; color: #6B7280; } .pipe .vw i:first-child { background: #F1F2F4; }
+.pipe .dd { width: 330px; border: 1px solid #C9CDD4; border-radius: 3px; padding: 4px 10px; font-size: 13px; font-weight: 500; display: flex; justify-content: space-between; }
+.tabs { display: flex; gap: 40px; padding: 18px 26px 0; font-size: 13px; color: #4A5160; border-bottom: 1px solid #DDE3E0; margin: 0 22px; }
+.tabs span { padding-bottom: 10px; } .tabs .on { color: #111; font-weight: 500; border: 1px solid #CDEBDD; border-bottom: 0; border-radius: 6px 6px 0 0; padding: 8px 14px 10px; margin-top: -8px; background: #fff; }
+.tabs .on b { background: #111; color: #fff; border-radius: 9px; font-size: 10px; padding: 1px 6px; margin-left: 6px; }
+.filters { display: flex; gap: 26px; padding: 14px 30px 0; font-size: 13px; font-style: italic; color: #6B7280; }
+.filters b { font-style: normal; color: #111; font-weight: 500; }
+.search { margin: 14px 30px 0; width: 330px; border: 1px solid #C9CDD4; border-radius: 6px; padding: 6px 10px; font-size: 12px; font-style: italic; color: #9AA1AC; }
+.cols { position: absolute; left: 20px; right: 0; top: 262px; bottom: 0; display: flex; gap: 12px; }
+.col { width: 296px; flex: none; background: #F4F5F6; border-radius: 6px 6px 0 0; position: relative; }
+.col-h { height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; font-size: 13px; font-weight: 600; background: #EEF0F1;
+  clip-path: polygon(0 0, 96% 0, 100% 50%, 96% 100%, 0 100%, 3% 50%); border-bottom: 2px solid #58C08B; }
+.col-h span { color: #111; }
+.card { background: #fff; border: 1px solid #E6E8EB; border-radius: 4px; margin: 10px 10px 0; padding: 12px 14px 0; font-size: 11.5px; position: relative; }
+.card .t { color: #2F5DA8; font-weight: 500; font-size: 12.5px; line-height: 1.45; margin-bottom: 8px; }
+.card .avs { display: flex; gap: 4px; margin-bottom: 8px; } .card .avs i { width: 22px; height: 22px; border: 1px solid #C9CDD4; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 10px; }
+.card .k { font-weight: 600; color: #1F2430; } .card .v { color: #4A5160; margin-bottom: 2px; }
+.card .pr { position: absolute; right: 14px; bottom: 30px; display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 500; }
+.card .pr i { width: 30px; height: 6px; border-radius: 3px; display: block; }
+.card .ring { position: absolute; right: 16px; bottom: 44px; width: 28px; height: 28px; border-radius: 50%; border: 4px solid; }
+.card .ft { border-top: 1px solid #EEF0F1; margin: 10px -14px 0; padding: 6px 10px; font-size: 10.5px; color: #4A5160; background: #FAFAFB; }
+.tot { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; background: #F4F5F6; border-top: 1px solid #DDE3E0; text-align: center; font-size: 14px; color: #1F2430; padding-top: 8px; line-height: 1.5; }
+
+/* dashboard */
+.db { padding: 18px 24px; background: #F4F5F7; height: 100%; }
+.db h1 { font-size: 21px; font-weight: 500; margin-bottom: 12px; }
+.db .sel { width: 330px; border: 1px solid #C9CDD4; border-radius: 3px; background: #fff; padding: 5px 10px; font-size: 13px; font-weight: 600; margin-bottom: 14px; }
+.db .wrap { background: #fff; border-radius: 6px; padding: 16px; }
+.db .fl { display: flex; gap: 10px; margin-bottom: 14px; } .db .fl span { border: 1px solid #DDE3E0; border-radius: 4px; padding: 6px 14px; font-size: 12.5px; font-weight: 500; }
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.c { background: #fff; border: 1px solid #E1E4E8; border-radius: 6px; position: relative; }
+.c .dots { position: absolute; right: 12px; top: 2px; color: #9AA1AC; }
+.kpi { height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.kpi b { font-size: 50px; font-weight: 700; color: #3E4A64; letter-spacing: -.01em; } .kpi span { font-size: 13px; color: #3E4A64; font-weight: 500; }
+.grid3 { display: grid; grid-template-columns: 1fr 1.6fr 1.6fr; gap: 12px; margin-top: 12px; }
+.ch { height: 300px; padding: 14px 16px; } .ch .ct { font-size: 15px; font-weight: 600; color: #3E4A64; }
+.lg { font-size: 12px; color: #3E4A64; } .lg div { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; } .lg i { width: 10px; height: 10px; border-radius: 50%; display: block; } .lg span { flex: 1; }
+.line { margin-top: 12px; height: 170px; padding: 12px 16px; }
+
+/* automação */
+.canvas { position: absolute; inset: 0; background-color: #FAFAFA; background-image: radial-gradient(#DADDE3 1.2px, transparent 1.2px); background-size: 24px 24px; }
+.canvas .ttl { position: absolute; left: 24px; top: 14px; font-size: 18px; }
+.canvas .close { position: absolute; right: 24px; top: 12px; border: 1.5px solid #2F3542; border-radius: 4px; padding: 4px 12px; font-size: 13px; background: #fff; }
+.nd { position: absolute; width: 380px; background: #fff; border: 1.5px solid #C9CDD4; border-radius: 4px; }
+.nd .hd { background: #111; color: #fff; font-size: 15px; padding: 6px 12px; }
+.nd .bd { font-size: 13.5px; padding: 10px 12px; line-height: 1.45; color: #4A5160; } .nd .bd b { color: #1F2430; }
+.nd .id { position: absolute; top: -20px; left: 0; font-size: 11px; color: #6B7280; }
+.wr { position: absolute; width: 2px; background: #2F3542; }
+.trig { width: 380px; padding: 12px 14px; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,.06); }
+</style>
+</head>
+<body>
+
+<!-- ================= KANBAN ================= -->
+<section class="screen" id="kanban">
+  <div class="top"><svg class="mark" viewBox="0 0 24 24"><path d="M15 4c-4 0-6 2-6 4.5S11 12 12 12.5 15 15 15 16.5 13 20 9 20" fill="none" stroke="#00CD8A" stroke-width="2.6" stroke-linecap="round"/></svg>
+    <span class="sp"></span><span>Ajuda</span><span class="ic"></span><span class="ic bell"><b>2</b></span><span class="acc">Comercial ▾</span></div>
+  <div class="side"><i></i><i class="r"></i><i></i><i class="on r"></i><i class="r"></i><i></i><i class="r"></i><i></i><i></i></div>
+  <div class="main">
+    <div class="kb-h"><h1>Negócios</h1><div class="btns"><span>⤓ Importar</span><span class="d">Criar negócio</span></div></div>
+    <div class="pipe"><span class="vw"><i>▦</i><i>≡</i></span><span class="dd">Pipeline Comercial <span>▾</span></span></div>
+    <div class="tabs"><span class="on">Todos os negócios <b>184</b></span><span>Contratos ativos</span><span>Prioridade alta</span><span>Inbound</span><span>+</span></div>
+    <div class="filters"><span>Contatos ▾</span><span>Empresas ▾</span><span>Proprietário ▾</span><span>Equipes ▾</span><span>Tarefas ▾</span><span>Etiquetas ▾</span><span>Produtos ▾</span><span>Criado em ▾</span><span>Fechado em ▾</span><b>⚲ Filtros avançados</b></div>
+    <div class="search">Buscar por nome</div>
+    <div class="cols" id="cols"></div>
+  </div>
+</section>
+
+<!-- ================= DASHBOARD ================= -->
+<section class="screen" id="dash">
+  <div class="top"><svg class="mark" viewBox="0 0 24 24"><path d="M15 4c-4 0-6 2-6 4.5S11 12 12 12.5 15 15 15 16.5 13 20 9 20" fill="none" stroke="#00CD8A" stroke-width="2.6" stroke-linecap="round"/></svg>
+    <span class="sp"></span><span>Ajuda</span><span class="ic"></span><span class="ic bell"><b>2</b></span><span class="acc">Comercial ▾</span></div>
+  <div class="side"><i class="on"></i><i class="r"></i><i></i><i class="r"></i><i class="r"></i><i></i><i class="r"></i><i></i><i></i></div>
+  <div class="main"><div class="db">
+    <h1>Dashboards</h1><div class="sel">▮ Negócios</div>
+    <div class="wrap">
+      <div class="fl"><span>Funil ▾</span><span>Status: <b style="color:#3B82F6">Todos</b></span><span>Data de criação ▾</span><span>Data de fechamento ▾</span><span>Equipe ▾</span><span>Usuário ▾</span></div>
+      <div class="grid4">
+        <div class="c kpi"><span class="dots">···</span><b>1.248</b><span>Negócios</span></div>
+        <div class="c kpi"><span class="dots">···</span><b>R$ 18,4M</b><span>Valor total</span></div>
+        <div class="c kpi"><span class="dots">···</span><b>R$ 14.760</b><span>Valor médio</span></div>
+        <div class="c kpi"><span class="dots">···</span><b>32 dias</b><span>Tempo médio de fechamento</span></div>
+      </div>
+      <div class="grid3">
+        <div class="c ch"><span class="dots">···</span><div class="ct">Taxa de conversão</div><svg id="g" width="250" height="230" viewBox="0 0 260 230" style="display:block;margin:10px auto 0"></svg></div>
+        <div class="c ch"><span class="dots">···</span><div class="ct">Negócios ganhos por funil</div>
+          <div style="display:flex;align-items:center;gap:16px;margin-top:18px"><div class="lg" style="flex:1">
+            <div><i style="background:#4C9BE8"></i><span>Pipeline Comercial</span>38,2%</div><div><i style="background:#9CC7F2"></i><span>Expansão de contas</span>24,5%</div>
+            <div><i style="background:#1D6FD6"></i><span>Inbound</span>17,9%</div><div><i style="background:#7AB648"></i><span>Parcerias</span>11,3%</div><div><i style="background:#9AA1AC"></i><span>Outros</span>8,1%</div></div>
+            <svg class="dn" data-v="38.2,24.5,17.9,11.3,8.1" data-c="#4C9BE8,#9CC7F2,#1D6FD6,#7AB648,#9AA1AC" data-n="287" width="190" height="190" viewBox="0 0 200 200"></svg></div></div>
+        <div class="c ch"><span class="dots">···</span><div class="ct">Negócios perdidos por motivo</div>
+          <div style="display:flex;align-items:center;gap:16px;margin-top:18px"><div class="lg" style="flex:1">
+            <div><i style="background:#4C9BE8"></i><span>Sem resposta</span>41%</div><div><i style="background:#1D6FD6"></i><span>Não qualificado</span>18%</div>
+            <div><i style="background:#7AB648"></i><span>Preço</span>14%</div><div><i style="background:#4F8A2B"></i><span>Escolha pelo concorrente</span>12%</div><div><i style="background:#9AA1AC"></i><span>Outros</span>15%</div></div>
+            <svg class="dn" data-v="41,18,14,12,15" data-c="#4C9BE8,#1D6FD6,#7AB648,#4F8A2B,#9AA1AC" data-n="312" width="190" height="190" viewBox="0 0 200 200"></svg></div></div>
+      </div>
+      <div class="c line"><span class="dots">···</span><div class="ct" style="font-size:15px;font-weight:600;color:#3E4A64">Negócios criados e ganhos por dia</div><svg id="ln" width="1480" height="120"></svg></div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ================= AUTOMAÇÃO ================= -->
+<section class="screen" id="auto">
+  <div class="top"><svg class="mark" viewBox="0 0 24 24"><path d="M15 4c-4 0-6 2-6 4.5S11 12 12 12.5 15 15 15 16.5 13 20 9 20" fill="none" stroke="#00CD8A" stroke-width="2.6" stroke-linecap="round"/></svg>
+    <span class="sp"></span><span>Ajuda</span><span class="ic"></span><span class="ic bell"><b>2</b></span><span class="acc">Comercial ▾</span></div>
+  <div class="side"><i></i><i class="r"></i><i></i><i class="r"></i><i class="r"></i><i></i><i class="r"></i><i></i><i class="on"></i></div>
+  <div class="main"><div class="canvas">
+    <div class="ttl">[Beeno] Etapa Lead · Roleta comercial</div><div class="close">Fechar construtor</div>
+    <div class="nd trig" style="left:560px; top:70px"><div style="font-size:14px;font-weight:600;margin-bottom:8px">$ Negócio <span style="font-weight:400;color:#4A5160">· gatilho de inscrição</span></div>
+      <div style="border-left:3px solid #00CD8A;padding:2px 0 2px 10px;font-size:12.5px;color:#4A5160;margin-bottom:10px">Inscreva negócios quando atenderem a estes filtros:</div>
+      <div style="background:#F1F2F4;border-radius:4px;padding:8px 10px;font-size:12.5px;color:#4A5160;line-height:1.6">Etapa do negócio<br>Está na etapa/pipeline <b style="color:#1F2430">Lead</b></div></div>
+    <div class="wr" style="left:749px; top:226px; height:60px"></div>
+    <div class="nd" style="left:560px; top:286px"><span class="id">3523</span><div class="hd">Revezar proprietário</div><div class="bd">Reveze os proprietários das equipes <b>Comercial Beeno</b></div></div>
+    <div class="wr" style="left:749px; top:374px; height:60px"></div>
+    <div class="nd" style="left:560px; top:434px"><span class="id">3526</span><div class="hd">Atraso</div><div class="bd">Atraso de <b>1 minuto</b></div></div>
+    <div class="wr" style="left:749px; top:503px; height:60px"></div>
+    <div class="nd" style="left:560px; top:563px"><span class="id">3529</span><div class="hd">Valor da propriedade do registro</div><div class="bd"><b>Proprietário</b> é conhecido</div></div>
+    <div class="wr" style="left:640px; top:632px; height:70px"></div><div class="wr" style="left:860px; top:632px; height:70px"></div>
+    <div class="nd" style="left:420px; top:702px; width:330px"><span class="id">3532</span><div class="hd">Criar tarefa</div><div class="bd">Crie a tarefa <b>Realizar primeiro contato</b> e atribua a <b>Proprietário do negócio</b></div></div>
+    <div class="nd" style="left:790px; top:702px; width:330px; border-style:dashed"><div class="hd">Revezar proprietário</div><div class="bd">Reveze os proprietários das equipes <b>Comercial Beeno</b></div></div>
+    <div style="position:absolute;left:520px;top:840px;border:2px solid #E5484D;color:#E5484D;border-radius:6px;padding:5px 16px;font-size:13px;font-weight:600;background:#fff">Fim das execuções</div>
+  </div></div>
+</section>
+
+<script>
+// ---------- kanban (dados fictícios)
+const COLS = [
+  ['Validação técnica', 3, 'R$ 96.400,00', 'R$ 28.920,00', [
+    ['Grupo Atlas | Expansão 2026', 'AL', 'Ana Lima', 'R$ 48.000,00', '15/12/2026', 'Alta', '2 dias e 4 horas'],
+    ['Nobre Logística | Implantação', 'RS', 'Rafael Souza', 'R$ 22.500,00', '', 'Média', '6 dias e 1 hora'],
+    ['Vértice Saúde | Jornada', 'MC', 'Marina Costa', '', '', 'Baixa', '1 semana e 2 dias']]],
+  ['Apresentação de Proposta', 5, 'R$ 214.000,00', 'R$ 128.400,00', [
+    ['Prisma Educação | Renovação 2026', 'RS', 'Rafael Souza', '', '30/11/2026', 'Média', '3 dias e 6 horas'],
+    ['Lume Energia | Sustentação', 'PA', 'Pedro Alves', '', '', 'Baixa', '4 dias e 2 horas'],
+    ['Rede Farol | Novo contrato', 'AL', 'Ana Lima', 'R$ 64.000,00', '', 'Alta', '1 dia e 3 horas']]],
+  ['Negociação', 12, 'R$ 1.284.600,00', 'R$ 963.450,00', [
+    ['Ondas Telecom | Aditivo contratual', 'MC', 'Marina Costa', '', '18/12/2026', 'Baixa', '7 horas e 12 minutos'],
+    ['Cerrado Agro | Re-proposta', 'PA', 'Pedro Alves', 'R$ 312.000,00', '20/01/2027', 'Alta', '11 horas e 40 minutos'],
+    ['Solaris Energia | Expansão', 'RS', 'Rafael Souza', '', '', 'Média', '2 dias']]],
+  ['Formalização', 4, 'R$ 386.900,00', 'R$ 348.210,00', [
+    ['Casa Verde Imóveis | Jornada', 'AL', 'Ana Lima', 'R$ 89.000,00', '', 'Baixa', '5 horas e 3 minutos'],
+    ['Ponto Certo Varejo | Implantação', 'MC', 'Marina Costa', 'R$ 118.500,00', '05/12/2026', 'Alta', '1 semana']]],
+  ['Ganho', 286, 'R$ 4.912.380,00', 'R$ 4.912.380,00', [
+    ['Ipê Móveis | Contrato anual', 'PA', 'Pedro Alves', 'R$ 41.250,00', '09/11/2026', 'Alta', '2 horas e 15 minutos'],
+    ['Raiz Alimentos | Renovação 2026', 'RS', 'Rafael Souza', 'R$ 37.394,10', '', 'Baixa', '3 dias']]],
+];
+const PR = { Alta: '#E5484D', Média: '#F5A524', Baixa: '#3FB97F' };
+document.getElementById('cols').innerHTML = COLS.map(([n, q, tot, pond, cards]) => `
+  <div class="col"><div class="col-h"><span>${n} ⓘ</span><span>${q} ‹</span></div>
+  ${cards.map(([t, av, own, val, dt, pr, tm]) => `<div class="card"><div class="t">${t}</div>
+    <div class="avs"><i>${av[0]}</i></div><div class="k">Proprietário</div><div class="v">${own}</div>
+    ${val ? `<div class="k">Valor</div><div class="v">${val}</div>` : ''}${dt ? `<div class="k">Data de fechamento</div><div class="v">${dt}</div>` : ''}
+    ${pr === 'Alta' ? `<span class="ring" style="border-color:#3FB97F"></span>` : ''}
+    <div class="pr">${pr}<i style="background:${PR[pr]}"></i></div><div class="ft">${tm} nesta etapa</div></div>`).join('')}
+  <div class="tot">Total: ${tot}<br>Ponderado: ${pond}</div></div>`).join('');
+
+// ---------- gráficos
+function arc(cx, cy, r, a0, a1) { const p = a => [cx + r * Math.cos(a), cy + r * Math.sin(a)]; const [x0, y0] = p(a0), [x1, y1] = p(a1);
+  return `M${x0},${y0} A${r},${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${x1},${y1}`; }
+const a0 = Math.PI * .75, sp = Math.PI * 1.5;
+document.getElementById('g').innerHTML = [[0, .12, '#E8685F'], [.12, .24, '#F2C230'], [.24, 1, '#7AB648']]
+  .map(([f0, f1, c]) => `<path d="${arc(130, 120, 92, a0 + sp * f0, a0 + sp * f1)}" stroke="${c}" stroke-width="34" fill="none"/>`).join('')
+  + `<path d="M${130 + 58 * Math.cos(a0 + sp * .186)},${120 + 58 * Math.sin(a0 + sp * .186)} L${130 + 76 * Math.cos(a0 + sp * .186)},${120 + 76 * Math.sin(a0 + sp * .186)}" stroke="#3E4A64" stroke-width="6" stroke-linecap="round"/>`
+  + `<text x="130" y="132" text-anchor="middle" font-size="30" font-weight="700" fill="#3E4A64" font-family="P">18,6%</text>`;
+document.querySelectorAll('.dn').forEach(s => { const v = s.dataset.v.split(',').map(Number), c = s.dataset.c.split(','); let a = -Math.PI / 2, h = '';
+  v.forEach((x, i) => { const e = a + x / 100 * Math.PI * 2; h += `<path d="${arc(100, 100, 72, a, e - .02)}" stroke="${c[i]}" stroke-width="40" fill="none"/>`; a = e; });
+  s.innerHTML = h + `<text x="100" y="100" text-anchor="middle" font-size="28" font-weight="600" fill="#3E4A64" font-family="P">${s.dataset.n}</text><text x="100" y="122" text-anchor="middle" font-size="12" fill="#6B7280" font-family="P">TOTAL</text>`; });
+let pts1 = '', pts2 = ''; for (let i = 0; i <= 60; i++) { const x = i * 24.5; const y1 = 95 - (30 + 25 * Math.sin(i / 3) + 18 * Math.sin(i / 1.3)) * .9 - i * .5; const y2 = 105 - (10 + 8 * Math.sin(i / 2.2 + 1)) - i * .25;
+  pts1 += `${x},${y1} `; pts2 += `${x},${y2} `; }
+document.getElementById('ln').innerHTML = `<polyline points="${pts1}" fill="none" stroke="#7AB648" stroke-width="2.5"/><polyline points="${pts2}" fill="none" stroke="#F2A15E" stroke-width="2.5"/>`;
+</script>
+</body>
+</html>
