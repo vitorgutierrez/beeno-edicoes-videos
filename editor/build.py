@@ -29,7 +29,7 @@ import scenes as SC  # noqa: E402
 ROOT = mg.ROOT
 FPS = 30
 W, H = mg.W, mg.H
-# tom mais sóbrio/escuro no apresentador, como nos ADs da RVOPS
+# tom mais sóbrio/escuro no apresentador
 GRADE = "eq=contrast=1.06:saturation=0.82:brightness=-0.03:gamma=0.97,vignette=angle=PI/5"
 
 

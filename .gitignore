@@ -2,3 +2,10 @@ __pycache__/
 *.pyc
 *.mix.wav
 assets/music/
+
+# Renders e quadros temporários das animações HTML
+motion-html/saida/
+motion-html/frames_*/
+motion-html/prof_*/
+motion-html/preview_*/
+node_modules/

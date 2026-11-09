@@ -1,5 +1,5 @@
 """Primitivas visuais na identidade do Beeno (beeno.ai), com a linguagem
-sóbria/documental dos ADs da RVOPS: cortes secos, entradas por fade,
+sóbria/documental: cortes secos, entradas por fade,
 linhas finas, verde só como acento.
 
 Paleta: verde #00CD8A, tinta #0A1C15. Fonte: Poppins."""
@@ -165,7 +165,7 @@ def logo(width):
 # ---------------------------------------------------------------- fundos
 def panel_bg(frame):
     """Fundo do painel: o próprio quadro desfocado e escurecido com tinta verde
-    (mesma ideia do fundo desfocado/escuro da RVOPS)."""
+    (fundo desfocado/escuro)."""
     small = frame.resize((135, 240), Image.BILINEAR).crop((0, 30, 135, 150))
     small = small.filter(ImageFilter.GaussianBlur(6)).resize((W, PANEL_H), Image.BILINEAR).convert("RGBA")
     return Image.alpha_composite(small, _tint())

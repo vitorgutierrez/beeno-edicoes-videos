@@ -1,0 +1,557 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
+<link rel="stylesheet" href="poppins.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#stage{position:relative;width:1080px;height:1920px;font-family:'Poppins',sans-serif;
+  -webkit-font-smoothing:antialiased}
+#bg{position:absolute;inset:0;display:none;background:#0A1C15}
+body.dark #bg{display:block}
+#bg::after{content:'';position:absolute;inset:0;
+  background-image:linear-gradient(90deg,rgba(255,255,255,.043) 1px,transparent 1px),
+                   linear-gradient(rgba(255,255,255,.043) 1px,transparent 1px);
+  background-size:56px 56px}
+/* aurora: elemento de fundo, nunca no canvas (senao tinge o video no alpha) */
+#aur{position:absolute;left:540px;top:640px;width:1700px;height:1700px;margin:-850px 0 0 -850px;
+  opacity:0;will-change:opacity;
+  background:radial-gradient(circle,rgba(0,205,138,.20) 0%,rgba(0,205,138,.075) 42%,rgba(0,205,138,0) 70%)}
+#aurb{position:absolute;left:540px;top:520px;width:1700px;height:1700px;margin:-850px 0 0 -850px;
+  opacity:0;will-change:opacity;
+  background:radial-gradient(circle,rgba(1,150,250,.20) 0%,rgba(1,150,250,.075) 42%,rgba(1,150,250,0) 70%)}
+#shake{position:absolute;inset:0;will-change:transform}
+#fx{position:absolute;left:0;top:0}
+
+.ln{position:absolute;left:0;right:0;text-align:center;line-height:1.06;
+  text-shadow:0 3px 18px rgba(0,0,0,.85);opacity:0;will-change:opacity,transform}
+.big{font-size:84px;font-weight:800;letter-spacing:-.032em;color:#FFFFFF}
+.mid{font-size:64px;font-weight:800;letter-spacing:-.028em;color:#FFFFFF}
+.sml{font-size:50px;font-weight:600;letter-spacing:-.018em;color:#A9BDB4}
+
+#L_CANAL{top:1300px} #L_BEM{top:1330px}
+#L_DEP{top:1310px}   #L_NEG{top:1452px}
+#L_ENTRA{top:1330px} #L_PIPE{top:1290px}
+#L_SEM{top:1400px;color:#5FE2B3}
+
+/* linhas com marcador — ✓ verde no Beeno, • azul no Blip */
+.tk{position:absolute;left:196px;display:flex;align-items:center;gap:26px;
+  font-size:50px;font-weight:700;letter-spacing:-.022em;color:#E4EEE9;white-space:nowrap;
+  line-height:1;text-shadow:0 3px 18px rgba(0,0,0,.85);opacity:0;
+  will-change:opacity,transform}
+.tk i{display:block;width:38px;height:38px;flex:0 0 auto;position:relative}
+.tk i::before,.tk i::after{content:'';position:absolute;border-radius:3px;background:#00CD8A}
+.tk i::before{left:2px;top:20px;width:17px;height:5px;transform:rotate(45deg)}
+.tk i::after{left:11px;top:16px;width:29px;height:5px;transform:rotate(-45deg)}
+.tk.blue i::before,.tk.blue i::after{background:#0196FA}
+#k0{top:1432px} #k1{top:1512px} #k2{top:1592px}
+#p0{top:1424px} #p1{top:1504px} #p2{top:1584px}
+</style></head><body><div id="stage">
+<div id="bg"><div id="aurb"></div><div id="aur"></div></div>
+<div id="shake">
+  <canvas id="fx" width="1080" height="1920"></canvas>
+
+  <div class="ln big" id="L_CANAL">O Blip é o canal.</div>
+  <div class="tk blue" id="k0"><i></i>a inteligência da conversa</div>
+  <div class="tk blue" id="k1"><i></i>o atendimento que escala</div>
+  <div class="tk blue" id="k2"><i></i>o lead qualificado no WhatsApp</div>
+  <div class="ln mid" id="L_BEM">Isso o Blip faz muito bem.</div>
+
+  <div class="ln big" id="L_DEP">E depois?</div>
+  <div class="ln sml" id="L_NEG">A conversa precisa virar negócio.</div>
+  <div class="ln mid" id="L_ENTRA">É aí que entra o Beeno.</div>
+
+  <div class="ln big" id="L_PIPE">O lead vira pipeline.</div>
+  <div class="tk" id="p0"><i></i>cadência</div>
+  <div class="tk" id="p1"><i></i>follow-up no tempo certo</div>
+  <div class="tk" id="p2"><i></i>caminha até o fechamento</div>
+  <div class="ln big" id="L_SEM">Sem se perder no meio.</div>
+</div>
+</div>
+<script src="assets-beeno-02.js"></script>
+<script>
+/* ==================================================================
+   TEMPOS — casar com a locucao:
+   ATO 1 "O Blip e o canal. E a inteligencia da conversa, o atendimento
+          que escala, o lead que chega qualificado no WhatsApp.
+          Isso o Blip faz muito bem."
+   ATO 2 "Mas depois que essa conversa acontece, alguem precisa
+          transformar ela em negocio. E ai que entra o Beeno."
+   ATO 3 "O Beeno e onde o lead que veio do Blip vira pipeline.
+          Ganha cadencia, follow-up no tempo certo, e caminha ate o
+          fechamento - sem se perder no meio."
+   ================================================================== */
+var T_BLIP  = 0.30;   /* marca da Blip entra                */
+var T_CANAL = 0.90;   /* "O Blip e o canal."                */
+var T_CONV  = 1.90;   /* "a inteligencia da conversa"       */
+var T_ESC   = 3.45;   /* "o atendimento que escala"         */
+var T_QUAL  = 4.85;   /* "o lead que chega qualificado"     */
+var T_BEM   = 7.40;   /* "Isso o Blip faz muito bem."       */
+var T_DEP   = 9.90;   /* "Mas depois que essa conversa..."  */
+var T_NEG   = 11.60;  /* "alguem precisa transformar..."    */
+var T_BEENO = 13.90;  /* "E ai que entra o Beeno."          */
+var T_PIPE  = 16.20;  /* "...vira pipeline"                 */
+var T_CAD   = 19.70;  /* "Ganha cadencia,"                  */
+var T_FUP   = 20.70;  /* "follow-up no tempo certo,"        */
+var T_FECH  = 22.40;  /* "e caminha ate o fechamento"       */
+var T_SEM   = 24.30;  /* "sem se perder no meio"            */
+var T_LOCK  = 25.70;  /* assinatura beeno + blip            */
+var DUR     = 27.50;
+
+var SHOW_LOCK = true;  /* false tira a assinatura do final */
+
+/* paletas */
+var C_BR=[0,205,138], C_LT=[95,226,179], C_DK=[110,131,122], C_BL=[1,150,250];
+
+var shake=document.getElementById('shake'),
+    cv=document.getElementById('fx'), ctx=cv.getContext('2d'),
+    aur=document.getElementById('aur'), aurb=document.getElementById('aurb');
+var E={}; ['L_CANAL','L_BEM','L_DEP','L_NEG','L_ENTRA','L_PIPE','L_SEM',
+           'k0','k1','k2','p0','p1','p2'].forEach(function(id){E[id]=document.getElementById(id)});
+
+function cl(v,a,b){return v<a?a:(v>b?b:v)}
+function oCubic(x){x=cl(x,0,1);return 1-Math.pow(1-x,3)}
+function ioCubic(x){x=cl(x,0,1);return x<0.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2}
+function oBack(x,c){x=cl(x,0,1);c=c||1.9;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)}
+function mix(a,b,p){return [a[0]+(b[0]-a[0])*p,a[1]+(b[1]-a[1])*p,a[2]+(b[2]-a[2])*p]}
+function rgba(c,a){return 'rgba('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+','+a.toFixed(3)+')'}
+function rr(x,y,w,h,rd){ctx.beginPath();ctx.roundRect(x,y,w,h,rd)}
+function lerp(a,b,p){return a+(b-a)*p}
+
+/* easing oficial do site */
+function bez(x1,y1,x2,y2){
+  function A(a,b){return 1-3*b+3*a} function B(a,b){return 3*b-6*a} function C(a){return 3*a}
+  function f(t,a,b){return ((A(a,b)*t+B(a,b))*t+C(a))*t}
+  function d(t,a,b){return 3*A(a,b)*t*t+2*B(a,b)*t+C(a)}
+  return function(x){ if(x<=0)return 0; if(x>=1)return 1; var t=x;
+    for(var i=0;i<8;i++){var s=d(t,x1,x2); if(!s)break; t-=(f(t,x1,x2)-x)/s;}
+    return f(t,y1,y2); };
+}
+var eB=bez(.22,1,.36,1), REV=0.70;
+function show(el,t,T,dy){
+  var p=eB((t-T)/REV);
+  el.style.opacity=p.toFixed(3);
+  el.style.transform='translateY('+((dy===undefined?28:dy)*(1-p)).toFixed(2)+'px)';
+  return p;
+}
+function hide(el,t,T,dur,up){
+  if(t<T) return;
+  var p=oCubic((t-T)/(dur||0.42));
+  el.style.opacity=(parseFloat(el.style.opacity||1)*(1-p)).toFixed(3);
+  el.style.transform='translateY('+(-(up||24)*p).toFixed(2)+'px)';
+}
+
+/* ================= logos: fundo removido no carregamento ================= */
+var LOGO={};
+function prep(im,mode){
+  var c=document.createElement('canvas'); c.width=im.width; c.height=im.height;
+  var g=c.getContext('2d'); g.drawImage(im,0,0);
+  var d=g.getImageData(0,0,c.width,c.height), p=d.data;
+  var x0=1e9,y0=1e9,x1=-1,y1=-1;
+  for(var i=0;i<p.length;i+=4){
+    var r=p[i],gg=p[i+1],b=p[i+2],a=p[i+3];
+    if(mode==='blip'){
+      var mx=Math.max(r,gg,b), mn=Math.min(r,gg,b), lum=(r+gg+b)/3;
+      if(mx-mn<30){            /* neutro: fundo claro ou wordmark preto */
+        var na=cl((247-lum)/247,0,1); if(na<0.03) na=0;
+        p[i]=255;p[i+1]=255;p[i+2]=255;p[i+3]=(na*255)|0;
+      }else{                   /* a bolha azul */
+        var dd=Math.max(Math.abs(r-247),Math.abs(gg-247),Math.abs(b-247));
+        p[i]=1;p[i+1]=150;p[i+2]=250;p[i+3]=(cl(dd/55,0,1)*255)|0;
+      }
+    }else{                     /* beeno branco: alfa pela luminancia */
+      var l2=(r+gg+b)/3;
+      p[i]=255;p[i+1]=255;p[i+2]=255;p[i+3]=(a*(l2/255))|0;
+    }
+    if(p[i+3]>12){
+      var px=(i/4)%c.width, py=((i/4)/c.width)|0;
+      if(px<x0)x0=px; if(px>x1)x1=px; if(py<y0)y0=py; if(py>y1)y1=py;
+    }
+  }
+  g.putImageData(d,0,0);
+  return {c:c, x:x0, y:y0, w:x1-x0+1, h:y1-y0+1};
+}
+function drawLogo(L,cx,cy,tw,alpha){
+  if(!L||alpha<=0.003) return;
+  var s=tw/L.w, th=L.h*s;
+  ctx.globalAlpha=alpha;
+  ctx.drawImage(L.c, L.x,L.y,L.w,L.h, cx-tw/2, cy-th/2, tw, th);
+  ctx.globalAlpha=1;
+}
+window.ASSETS_READY=new Promise(function(res){
+  var n=0; function done(){ if(++n===2) res(true) }
+  function ld(src,mode,key){ var im=new Image();
+    im.onload=function(){ LOGO[key]=prep(im,mode); done() };
+    im.onerror=function(){ done() };
+    im.src=src; }
+  ld(window.IMG_BLIP,'blip','blip');
+  ld(window.IMG_BEENO,'beeno','beeno');
+});
+
+/* ================= ATO 1: as conversas ================================== */
+var NT=20, GC=4, GR=5, GW=210, GH=76, GGX=24, GGY=20;
+var GX0=(1080-(GC*GW+(GC-1)*GGX))/2, GY0=596;
+var BPOSE=[[140,548,438,96],[462,668,468,96],[112,788,404,96],[502,908,420,96],[170,1028,470,96]];
+var TILES=[];
+for(var i=0;i<NT;i++){
+  var c=i%GC, r=(i/GC)|0;
+  TILES.push({b:i<5?BPOSE[i]:null,
+              g:[GX0+c*(GW+GGX), GY0+r*(GH+GGY), GW, GH], ord:i});
+}
+var CVX=540, CVY=724;                       /* onde as conversas viram 1 lead */
+
+/* ================= ATO 3: o kanban ====================================== */
+var KC=4, KW=230, KGX=18;
+var KX0=(1080-(KC*KW+(KC-1)*KGX))/2, KY0=470, KH=562;
+var COLS=['Lead recebido','Qualificação','Proposta','Fechado'];
+var CARDW=210, CARDH=124;
+function colCx(i){ return KX0+i*(KW+KGX)+KW/2 }
+/* o card anda de etapa em etapa, no ritmo da cadencia */
+var HOPS=[T_CAD+0.15, T_FUP+0.40, T_FECH+0.20];
+var CADY=1128, CADX0=196, CADX1=884, NCD=5;
+
+function cardPos(t){
+  var st=0, p=0;
+  for(var i=0;i<HOPS.length;i++){
+    if(t>=HOPS[i]+0.42){ st=i+1; }
+    else if(t>=HOPS[i]){ st=i; p=(t-HOPS[i])/0.42; break; }
+  }
+  var a=colCx(st), b=colCx(Math.min(st+1,KC-1));
+  var e=ioCubic(p);
+  return {x:lerp(a,b,p>0?e:0), y:KY0+108-(p>0?Math.sin(p*Math.PI)*68:0), st:st, mov:p>0&&p<1};
+}
+
+/* ================= painel da extensao =================================== */
+function panel(t,px,alpha){
+  var PW=520, PH=556, PY=498;
+  ctx.globalAlpha=alpha;
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,.55)'; ctx.shadowBlur=44; ctx.shadowOffsetY=14;
+  rr(px,PY,PW,PH,18); ctx.fillStyle='rgba(9,26,20,.93)'; ctx.fill();
+  ctx.restore();
+  ctx.lineWidth=1.5; rr(px,PY,PW,PH,18);
+  ctx.strokeStyle=rgba(C_BR,0.40); ctx.stroke();
+  /* cabecalho verde com a marca */
+  ctx.save(); rr(px,PY,PW,80,18); ctx.clip();
+  ctx.fillStyle=rgba(C_BR,1); ctx.fillRect(px,PY,PW,80);
+  ctx.restore();
+  drawLogo(LOGO.beeno, px+112, PY+40, 148, alpha);
+  /* linhas do contato */
+  var by=PY+130;
+  ctx.fillStyle='rgba(255,255,255,.86)'; rr(px+34,by,236,19,9); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.30)';
+  rr(px+34,by+46,376,13,7); ctx.fill();
+  rr(px+34,by+80,304,13,7); ctx.fill();
+  /* origem: veio da Blip */
+  rr(px+34,by+126,196,52,26); ctx.fillStyle=rgba(C_BL,0.16); ctx.fill();
+  ctx.lineWidth=1.5; rr(px+34,by+126,196,52,26); ctx.strokeStyle=rgba(C_BL,0.45); ctx.stroke();
+  drawLogo(LOGO.blip, px+124, by+152, 124, alpha*0.95);
+  /* acoes */
+  var ay=by+214;
+  [[px+34,'+ Negócio'],[px+272,'+ Tarefa']].forEach(function(q){
+    rr(q[0],ay,214,66,33); ctx.fillStyle=rgba(C_BR,0.14); ctx.fill();
+    ctx.lineWidth=1.5; rr(q[0],ay,214,66,33); ctx.strokeStyle=rgba(C_BR,0.55); ctx.stroke();
+    ctx.font='600 31px Poppins'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle=rgba(C_LT,0.95); ctx.fillText(q[1],q[0]+107,ay+34);
+  });
+  /* negocio criado */
+  var ny=ay+92;
+  rr(px+34,ny,PW-68,104,14); ctx.fillStyle='rgba(255,255,255,.055)'; ctx.fill();
+  ctx.lineWidth=1.5; rr(px+PW-208,ny+16,152,40,20); ctx.strokeStyle=rgba(C_BR,0.45); ctx.stroke();
+  ctx.lineWidth=1.5; rr(px+34,ny,PW-68,104,14);
+  ctx.strokeStyle='rgba(255,255,255,.11)'; ctx.stroke();
+  ctx.font='600 24px Poppins'; ctx.textAlign='left'; ctx.textBaseline='middle';
+  ctx.fillStyle='rgba(255,255,255,.42)'; ctx.fillText('NEGÓCIO', px+56, ny+28);
+  ctx.fillStyle='rgba(255,255,255,.70)'; rr(px+56,ny+50,214,14,7); ctx.fill();
+  rr(px+PW-208,ny+16,152,40,20); ctx.fillStyle=rgba(C_BR,0.18); ctx.fill();
+  ctx.font='600 22px Poppins'; ctx.textAlign='center';
+  ctx.fillStyle=rgba(C_LT,0.95); ctx.fillText('Em andamento', px+PW-132, ny+37);
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  ctx.globalAlpha=1;
+  return {x:px,y:PY,w:PW,h:PH};
+}
+
+/* uma "conversa" desenhada como cartao */
+function tile(x,y,w,h,a,col){
+  if(a<=0.01) return;
+  ctx.globalAlpha=a;
+  var rd=Math.min(22,h*0.32);
+  rr(x,y,w,h,rd); ctx.fillStyle='rgba(9,26,20,.72)'; ctx.fill();
+  rr(x,y,w,h,rd); ctx.fillStyle=rgba(col,0.14); ctx.fill();
+  ctx.lineWidth=2; rr(x,y,w,h,rd); ctx.strokeStyle=rgba(col,0.44); ctx.stroke();
+  var pad=w*0.13, bh=Math.max(6,h*0.10);
+  ctx.fillStyle='rgba(255,255,255,.42)';
+  rr(x+pad,y+h*0.30,(w-2*pad)*0.84,bh,bh/2); ctx.fill();
+  if(h>60){ ctx.fillStyle='rgba(255,255,255,.26)';
+    rr(x+pad,y+h*0.56,(w-2*pad)*0.54,bh,bh/2); ctx.fill(); }
+  ctx.globalAlpha=1;
+}
+
+function seek(t){
+  ctx.clearRect(0,0,1080,1920);
+
+  /* ---- trancos ---- */
+  var sx=0, sy=0;
+  [[T_QUAL,7],[T_BEENO,9],[T_PIPE,7],[T_FECH,6],[T_SEM,8]].forEach(function(a){
+    var dk=t-a[0];
+    if(dk>0&&dk<0.34){var m=a[1]*Math.exp(-dk*15); sy+=m*Math.sin(dk*66); sx+=m*0.45*Math.sin(dk*58);}
+  });
+  HOPS.forEach(function(T){ var dk=t-(T+0.40);
+    if(dk>0&&dk<0.22){var m=4*Math.exp(-dk*20); sy+=m*Math.sin(dk*80);} });
+  shake.style.transform='translate('+sx.toFixed(2)+'px,'+sy.toFixed(2)+'px)';
+
+  /* ---- auroras: azul no ato 1, verde a partir da entrada do Beeno ---- */
+  var gb=cl(oCubic((t-T_BLIP)/0.7),0,1)*(1-cl((t-(T_BEENO-0.2))/1.2,0,1));
+  var gg=cl(oCubic((t-T_BEENO)/1.0),0,1);
+  aurb.style.opacity=gb.toFixed(3);
+  aur.style.opacity=gg.toFixed(3);
+
+  /* =================== ATO 1 ============================================ */
+  var a1=1-cl((t-T_DEP)/0.55,0,1);                 /* o ato 1 se recolhe    */
+  /* marca da Blip */
+  var lp=eB((t-T_BLIP)/0.85);
+  drawLogo(LOGO.blip, 540, 338-14*(1-lp), 446*(0.94+0.06*lp), lp*a1);
+
+  /* conversas: bolhas -> grade -> um lead so */
+  for(var n=0;n<NT;n++){
+    var T0=TILES[n];
+    var conv=cl((t-(T_QUAL+T0.ord*0.012))/0.55,0,1);   /* convergencia */
+    var x,y,w,h,al=1;
+    if(T0.b){
+      var born=cl(oBack((t-(T_CONV+n*0.30))/0.48,2.0),0,1.06);
+      if(born<=0.01) continue;
+      var m=eB((t-T_ESC)/0.65);
+      x=lerp(T0.b[0],T0.g[0],m); y=lerp(T0.b[1],T0.g[1],m);
+      w=lerp(T0.b[2],T0.g[2],m); h=lerp(T0.b[3],T0.g[3],m);
+      al=born<1?born:1;
+      var s=0.8+0.2*born;
+      x+=w*(1-s)/2; y+=h*(1-s)/2; w*=s; h*=s;
+    }else{
+      var bn=cl(oBack((t-(T_ESC+0.22+(n-5)*0.052))/0.45,1.9),0,1.06);
+      if(bn<=0.01) continue;
+      x=T0.g[0]; y=T0.g[1]; w=T0.g[2]; h=T0.g[3];
+      var s2=0.55+0.45*bn; al=cl(bn,0,1);
+      x+=w*(1-s2)/2; y+=h*(1-s2)/2; w*=s2; h*=s2;
+    }
+    if(conv>0){                                       /* tudo vira um ponto */
+      var e=eB(conv);
+      x=lerp(x,CVX-16,e); y=lerp(y,CVY-16,e);
+      w=lerp(w,32,e);     h=lerp(h,32,e);
+      al*=(1-cl((conv-0.55)/0.45,0,1));
+    }
+    tile(x,y,w,h,al*a1,C_BL);
+  }
+
+  /* =================== O LEAD: azul, depois verde ======================= */
+  var born=cl((t-(T_QUAL+0.30))/0.35,0,1);
+  if(born>0.01){
+    /* percurso: nasce no meio -> sobe pro centro -> sai pra esquerda ->
+       entra no kanban como card */
+    var lx=CVX, ly=CVY;
+    var m1=eB((t-T_DEP)/0.75);           lx=lerp(lx,540,m1); ly=lerp(ly,650,m1);
+    var m2=eB((t-T_BEENO)/0.80);         lx=lerp(lx,262,m2); ly=lerp(ly,780,m2);
+    var turn=cl((t-(T_BEENO+0.62))/0.45,0,1);       /* vira verde */
+    var col=mix(C_BL,C_BR,turn);
+    var fade=1-cl((t-(T_PIPE+0.05))/0.45,0,1);      /* entrega o bastao ao card */
+    var pul=1+0.07*Math.sin(t*5.2);
+    var al=born*fade;
+    if(al>0.01){
+      /* pulso de espera: o lead esta ali, vivo, parado */
+      if(t>T_QUAL+0.9){
+        var hb=(t-(T_QUAL+0.9))%1.9;
+        if(hb<1.0){ var hp=oCubic(hb/1.0);
+          ctx.beginPath(); ctx.arc(lx,ly,38+118*hp,0,6.2832);
+          ctx.lineWidth=4*(1-hp)+0.5; ctx.strokeStyle=rgba(col,0.34*(1-hp)*al); ctx.stroke(); }
+      }
+      ctx.beginPath(); ctx.arc(lx,ly,70*pul,0,6.2832);
+      ctx.fillStyle=rgba(col,0.15*al); ctx.fill();
+      ctx.beginPath(); ctx.arc(lx,ly,36*pul,0,6.2832); ctx.fillStyle=rgba(col,0.97*al); ctx.fill();
+      ctx.beginPath(); ctx.arc(lx,ly,16*pul,0,6.2832);
+      ctx.fillStyle='rgba(255,255,255,'+(0.95*al).toFixed(3)+')'; ctx.fill();
+      /* selo de qualificado */
+      var qb=cl(oBack((t-(T_QUAL+0.55))/0.45,2.2),0,1.06)*al;
+      if(qb>0.02){
+        ctx.beginPath(); ctx.arc(lx+40,ly-40,23*qb,0,6.2832);
+        ctx.fillStyle=rgba(col,1); ctx.fill();
+        ctx.lineWidth=6; ctx.lineCap='round'; ctx.strokeStyle='#0A1C15';
+        ctx.beginPath(); ctx.moveTo(lx+29,ly-40); ctx.lineTo(lx+37,ly-32); ctx.lineTo(lx+51,ly-50);
+        ctx.globalAlpha=qb; ctx.stroke(); ctx.globalAlpha=1;
+      }
+    }
+  }
+
+  /* =================== ATO 2: o vazio =================================== */
+  var vA=cl(oCubic((t-(T_DEP+0.25))/0.55),0,1)*(1-cl((t-(T_BEENO-0.15))/0.45,0,1));
+  if(vA>0.01){
+    ctx.save(); ctx.setLineDash([18,22]); ctx.lineWidth=3;
+    rr(196,846,688,330,26);
+    ctx.strokeStyle='rgba(255,255,255,'+(0.30*vA).toFixed(3)+')'; ctx.stroke();
+    ctx.setLineDash([]); ctx.restore();
+    var qa=cl(oCubic((t-T_NEG)/0.5),0,1)*vA;
+    if(qa>0.02){
+      ctx.font='800 118px Poppins'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillStyle='rgba(255,255,255,'+(0.46*qa).toFixed(3)+')';
+      ctx.fillText('?',540,1012);
+      ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    }
+  }
+
+  /* =================== ATO 2: o painel do Beeno ========================= */
+  var pA=cl(oCubic((t-T_BEENO)/0.5),0,1)*(1-cl((t-(T_PIPE-0.25))/0.5,0,1));
+  if(pA>0.01){
+    var slide=eB((t-T_BEENO)/0.80);
+    var px=lerp(1180,478,slide);
+    panel(t,px,pA);
+    /* o lead atravessa pro painel */
+    var link=cl((t-(T_BEENO+0.55))/0.5,0,1)*pA;
+    if(link>0.02){
+      ctx.save(); ctx.setLineDash([12,14]); ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(310,780); ctx.lineTo(310+(px-310-16)*link,780);
+      ctx.strokeStyle=rgba(C_BR,0.55*link); ctx.stroke();
+      ctx.setLineDash([]); ctx.restore();
+    }
+  }
+
+  /* =================== ATO 3: o kanban ================================== */
+  var kA=cl(oCubic((t-T_PIPE)/0.6),0,1)*(1-cl((t-(T_LOCK-0.15))/0.5,0,1));
+  if(kA>0.01){
+    ctx.font='600 30px Poppins'; ctx.textBaseline='middle';
+    for(var c2=0;c2<KC;c2++){
+      var ap=cl(oCubic((t-(T_PIPE+c2*0.09))/0.5),0,1)*kA;
+      if(ap<=0.01) continue;
+      var kx=KX0+c2*(KW+KGX);
+      ctx.globalAlpha=ap;
+      rr(kx,KY0,KW,KH,16); ctx.fillStyle='rgba(9,26,20,.58)'; ctx.fill();
+      ctx.lineWidth=1.5; rr(kx,KY0,KW,KH,16);
+      ctx.strokeStyle='rgba(255,255,255,.15)'; ctx.stroke();
+      /* a ultima etapa acende quando o card chega */
+      var win=(c2===KC-1)?cl((t-(HOPS[HOPS.length-1]+0.42))/0.5,0,1):0;
+      if(win>0.02){
+        rr(kx,KY0,KW,KH,16); ctx.fillStyle=rgba(C_BR,0.10*win); ctx.fill();
+        ctx.lineWidth=2; rr(kx,KY0,KW,KH,16); ctx.strokeStyle=rgba(C_BR,0.55*win); ctx.stroke();
+      }
+      ctx.textAlign='center';
+      ctx.fillStyle=win>0.02?rgba(C_LT,0.95):'rgba(255,255,255,.62)';
+      ctx.fillText(COLS[c2], kx+KW/2, KY0+38);
+      /* cartoes de enfeite nas etapas ja passadas */
+      var cp=cardPos(t);
+      for(var q=0;q<3;q++){
+        if(c2===cp.st && q===0 && !cp.mov) continue;
+        var gy=KY0+108+q*140;
+        if(gy+124>KY0+KH-16) continue;
+        var gh=cl((t-(T_PIPE+0.35+c2*0.07+q*0.05))/0.5,0,1)*0.80;
+        if(gh<=0.02) continue;
+        ctx.globalAlpha=ap*gh;
+        rr(kx+18,gy,KW-36,124,14); ctx.fillStyle='rgba(9,26,20,.62)'; ctx.fill();
+        ctx.lineWidth=1.5; rr(kx+18,gy,KW-36,124,14);
+        ctx.strokeStyle='rgba(255,255,255,.13)'; ctx.stroke();
+        ctx.fillStyle='rgba(255,255,255,.26)';
+        rr(kx+36,gy+26,(KW-72)*0.74,12,6); ctx.fill();
+        rr(kx+36,gy+52,(KW-72)*0.46,10,5); ctx.fill();
+        ctx.globalAlpha=ap;
+      }
+      ctx.globalAlpha=1;
+    }
+    ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+
+    /* ---- trilho de cadencia: agora dispara todos ---- */
+    var cdA=cl(oCubic((t-T_CAD)/0.5),0,1)*kA;
+    if(cdA>0.01){
+      ctx.save();
+      ctx.setLineDash([13,16]); ctx.lineWidth=2.5; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(CADX0,CADY); ctx.lineTo(CADX1,CADY);
+      ctx.strokeStyle='rgba(255,255,255,'+(0.28*cdA).toFixed(3)+')'; ctx.stroke();
+      ctx.setLineDash([]);
+      var run=cl((t-(T_CAD+0.18))/(0.62*(NCD-1)),0,1);
+      if(run>0){ ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(CADX0,CADY); ctx.lineTo(CADX0+(CADX1-CADX0)*run,CADY);
+        ctx.strokeStyle=rgba(C_BR,0.55*cdA); ctx.stroke(); }
+      for(var k=0;k<NCD;k++){
+        var kx2=CADX0+(CADX1-CADX0)*k/(NCD-1);
+        var TF=T_CAD+0.18+k*0.62;
+        var lit=t>=TF?1:0, flash=lit?Math.exp(-(t-TF)*2.4):0;
+        ctx.beginPath(); ctx.arc(kx2,CADY,19,0,6.2832);
+        if(lit){
+          ctx.fillStyle=rgba(mix(C_BR,C_LT,flash),(0.92+0.08*flash)*cdA); ctx.fill();
+          var rip=cl((t-TF)/0.7,0,1);
+          if(rip<1){ ctx.beginPath(); ctx.arc(kx2,CADY,19+52*rip,0,6.2832);
+            ctx.lineWidth=4*(1-rip)+0.5; ctx.strokeStyle=rgba(C_BR,0.55*(1-rip)*cdA); ctx.stroke(); }
+        }else{
+          ctx.lineWidth=2.5; ctx.strokeStyle='rgba(255,255,255,'+(0.19*cdA).toFixed(3)+')'; ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+
+    /* ---- o card do lead atravessando o funil ---- */
+    var cA=cl(oCubic((t-(T_PIPE+0.30))/0.45),0,1)*kA;
+    if(cA>0.01){
+      var cp2=cardPos(t);
+      var wn=cl((t-(HOPS[HOPS.length-1]+0.42))/0.45,0,1);
+      var cx2=cp2.x-CARDW/2, cy2=cp2.y;
+      ctx.globalAlpha=cA;
+      ctx.save(); ctx.shadowColor=rgba(C_BR,0.45); ctx.shadowBlur=26+20*wn; ctx.shadowOffsetY=6;
+      rr(cx2,cy2,CARDW,CARDH,14);
+      ctx.fillStyle=wn>0.02?rgba(C_BR,0.20+0.10*wn):'rgba(9,26,20,.92)'; ctx.fill();
+      ctx.restore();
+      ctx.lineWidth=2; rr(cx2,cy2,CARDW,CARDH,14);
+      ctx.strokeStyle=rgba(C_BR,0.55+0.40*wn); ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,.80)'; rr(cx2+22,cy2+24,CARDW-96,15,7); ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.34)'; rr(cx2+22,cy2+52,CARDW-128,12,6); ctx.fill();
+      /* o selo azul: esse lead veio da Blip */
+      drawLogo(LOGO.blip, cx2+CARDW-44, cy2+34, 50, cA*0.9);
+      /* valor quando fecha */
+      if(wn>0.02){
+        ctx.font='800 29px Poppins'; ctx.textAlign='left'; ctx.textBaseline='middle';
+        ctx.fillStyle=rgba(C_LT,wn); ctx.fillText('Fechado', cx2+22, cy2+94);
+        ctx.beginPath(); ctx.arc(cx2+CARDW-40,cy2+92,21*wn,0,6.2832);
+        ctx.fillStyle=rgba(C_BR,wn); ctx.fill();
+        ctx.lineWidth=5.5; ctx.lineCap='round'; ctx.strokeStyle='#0A1C15';
+        ctx.globalAlpha=cA*wn;
+        ctx.beginPath(); ctx.moveTo(cx2+CARDW-50,cy2+92); ctx.lineTo(cx2+CARDW-43,cy2+99);
+        ctx.lineTo(cx2+CARDW-30,cy2+84); ctx.stroke();
+        ctx.textBaseline='alphabetic';
+      }
+      ctx.globalAlpha=1;
+      /* onda ao fechar */
+      if(wn>0.02&&wn<1){
+        ctx.beginPath(); ctx.arc(cp2.x,cy2+CARDH/2,60+520*oCubic(wn),0,6.2832);
+        ctx.lineWidth=8*(1-wn)+0.5; ctx.strokeStyle=rgba(C_BR,0.42*(1-wn)); ctx.stroke();
+      }
+    }
+  }
+
+  /* =================== assinatura final ================================= */
+  if(SHOW_LOCK){
+    var kl=eB((t-T_LOCK)/0.85);
+    if(kl>0.004){
+      var yy=880-18*(1-kl);
+      drawLogo(LOGO.beeno, 372, yy, 400, kl);
+      drawLogo(LOGO.blip,  760, yy, 310, kl);
+      ctx.font='300 78px Poppins'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillStyle='rgba(255,255,255,'+(0.55*kl).toFixed(3)+')';
+      ctx.fillText('+',600,yy);
+      ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    }
+  }
+
+  /* =================== texto ============================================ */
+  show(E.L_CANAL,t,T_CANAL);
+  show(E.k0,t,T_CONV); show(E.k1,t,T_ESC); show(E.k2,t,T_QUAL);
+  [E.k0,E.k1,E.k2].forEach(function(el,i){ hide(el,t,T_BEM-0.30+i*0.05,0.40,26) });
+  hide(E.L_CANAL,t,T_BEM-0.30,0.40,26);
+  show(E.L_BEM,t,T_BEM); hide(E.L_BEM,t,T_DEP-0.35,0.40,26);
+
+  show(E.L_DEP,t,T_DEP); show(E.L_NEG,t,T_NEG);
+  hide(E.L_DEP,t,T_BEENO-0.30,0.40,26); hide(E.L_NEG,t,T_BEENO-0.25,0.40,26);
+  show(E.L_ENTRA,t,T_BEENO); hide(E.L_ENTRA,t,T_PIPE-0.30,0.40,26);
+
+  show(E.L_PIPE,t,T_PIPE);
+  show(E.p0,t,T_CAD); show(E.p1,t,T_FUP); show(E.p2,t,T_FECH);
+  [E.p0,E.p1,E.p2].forEach(function(el,i){ hide(el,t,T_SEM-0.32+i*0.05,0.40,26) });
+  hide(E.L_PIPE,t,T_SEM-0.32,0.40,26);
+  show(E.L_SEM,t,T_SEM); hide(E.L_SEM,t,T_LOCK-0.25,0.42,26);
+}
+window.seek=seek; window.DUR=DUR;
+window.ASSETS_READY.then(function(){ seek(0) });
+seek(0);
+</script></body></html>

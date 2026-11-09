@@ -1,0 +1,402 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
+<link rel="stylesheet" href="poppins.css">
+<link rel="stylesheet" href="beeno-icons.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#stage{position:relative;width:1080px;height:1920px;font-family:'Poppins',sans-serif;
+  -webkit-font-smoothing:antialiased}
+#bg{position:absolute;inset:0;display:none;background:#0A1C15}
+body.dark #bg{display:block}
+#bg::after{content:'';position:absolute;inset:0;
+  background-image:linear-gradient(90deg,rgba(255,255,255,.043) 1px,transparent 1px),
+                   linear-gradient(rgba(255,255,255,.043) 1px,transparent 1px);
+  background-size:56px 56px}
+#aur{position:absolute;left:540px;top:700px;width:1800px;height:1800px;margin:-900px 0 0 -900px;
+  opacity:0;will-change:opacity;
+  background:radial-gradient(circle,rgba(0,205,138,.22) 0%,rgba(0,205,138,.08) 42%,rgba(0,205,138,0) 70%)}
+#shake{position:absolute;inset:0;will-change:transform}
+#fx{position:absolute;left:0;top:0}
+.pre{position:absolute;left:-9999px;top:0;font-size:20px}
+
+.ln{position:absolute;left:0;right:0;text-align:center;line-height:1.06;
+  text-shadow:0 3px 18px rgba(0,0,0,.85);opacity:0;will-change:opacity,transform}
+.big{font-size:84px;font-weight:800;letter-spacing:-.032em;color:#FFFFFF}
+.mid{font-size:68px;font-weight:800;letter-spacing:-.030em;color:#FFFFFF}
+.sml{font-size:52px;font-weight:600;letter-spacing:-.018em;color:#A9BDB4}
+.g{color:#5FE2B3} .r{color:#FF6568} .b{color:#3FB0FF}
+
+#a0{top:1258px} #a1{top:1330px} #a2{top:1402px} #a3{top:1486px}
+#b0{top:1276px} #b1{top:1352px} #b2{top:1448px}
+#c0{top:1300px} #c1{top:1382px}
+
+.tk{position:absolute;left:186px;display:flex;align-items:center;gap:26px;
+  font-size:56px;font-weight:700;letter-spacing:-.022em;color:#E4EEE9;white-space:nowrap;
+  line-height:1;text-shadow:0 3px 18px rgba(0,0,0,.85);opacity:0;will-change:opacity,transform}
+.tk i{display:block;width:40px;height:40px;flex:0 0 auto;position:relative}
+.tk i::before,.tk i::after{content:'';position:absolute;border-radius:3px;background:#00CD8A}
+.tk i::before{left:2px;top:21px;width:18px;height:6px;transform:rotate(45deg)}
+.tk i::after{left:12px;top:17px;width:30px;height:6px;transform:rotate(-45deg)}
+#d0{top:1330px} #d1{top:1424px}
+</style></head><body><div id="stage">
+<div id="bg"><div id="aur"></div></div>
+<div id="shake">
+  <canvas id="fx" width="1080" height="1920"></canvas>
+
+  <div class="ln sml" id="a0">o lead chega,</div>
+  <div class="ln sml" id="a1">o vendedor responde,</div>
+  <div class="ln sml" id="a2">a conversa esfria</div>
+  <div class="ln big" id="a3">e ninguém volta.</div>
+
+  <div class="ln sml" id="b0">No fim do mês:</div>
+  <div class="ln mid" id="b1">muito volume de conversa</div>
+  <div class="ln big r" id="b2">e nenhuma venda.</div>
+
+  <div class="ln mid" id="c0">É por isso que o</div>
+  <div class="ln big g" id="c1">Beeno existe.</div>
+
+  <div class="tk" id="d0"><i></i>CRM nativo no WhatsApp</div>
+  <div class="tk" id="d1"><i></i>integrado com a Blip</div>
+</div>
+<span class="pre" id="preFAB" style="font-family:FAB"></span>
+<span class="pre" id="preFAS" style="font-family:FAS;font-weight:900"></span>
+</div>
+<script src="assets-beeno-02.js"></script>
+<script>
+/* ==================================================================
+   TEMPOS — casar com a locucao:
+   "o lead chega, o vendedor responde, a conversa esfria e ninguem volta.
+    No fim do mes, voce tem um volume de conversa que nao tem venda.
+    E exatamente por isso que o Beeno existe, um CRM nativo no WhatsApp
+    integrado com a Blip"
+   ================================================================== */
+var T_LEAD  = 0.30;   /* "o lead chega"              */
+var T_RESP  = 1.25;   /* "o vendedor responde"       */
+var T_ESFR  = 2.35;   /* "a conversa esfria"         */
+var T_NING  = 3.50;   /* "e ninguem volta"           */
+var T_FIM   = 4.90;   /* "No fim do mes"             */
+var T_VOL   = 5.70;   /* "um volume de conversa"     */
+var T_SEMV  = 7.20;   /* "que nao tem venda"         */
+var T_BEENO = 8.90;   /* "e por isso que o Beeno existe" */
+var T_CRM   = 11.10;  /* "um CRM nativo no WhatsApp" */
+var T_BLIP  = 12.90;  /* "integrado com a Blip"      */
+var DUR     = 15.50;
+
+var SHOW_LOGO = true;  /* false tira as marcas Beeno/Blip da tela */
+
+/* paleta */
+var C_BR=[0,205,138], C_LT=[95,226,179], C_WA=[37,211,102], C_DK=[104,124,144],
+    C_RD=[255,101,104], C_BL=[1,150,250];
+
+var shake=document.getElementById('shake'), cv=document.getElementById('fx'),
+    ctx=cv.getContext('2d'), aur=document.getElementById('aur');
+var E={}; ['a0','a1','a2','a3','b0','b1','b2','c0','c1','d0','d1'].forEach(function(id){E[id]=document.getElementById(id)});
+
+var F=String.fromCharCode;
+var I={wa:F(0xf232), bolt:F(0xf0e7), check:F(0xf00c), calendar:F(0xf133), sync:F(0xf021),
+       clip:F(0xf0c6), smile:F(0xf118), mic:F(0xf130), user:F(0xf007), plus:F(0xf067)};
+document.getElementById('preFAB').textContent=I.wa;
+var allFas=''; for(var k in I) if(k!=='wa') allFas+=I[k];
+document.getElementById('preFAS').textContent=allFas;
+
+function cl(v,a,b){return v<a?a:(v>b?b:v)}
+function oCubic(x){x=cl(x,0,1);return 1-Math.pow(1-x,3)}
+function oQuart(x){x=cl(x,0,1);return 1-Math.pow(1-x,4)}
+function ioCubic(x){x=cl(x,0,1);return x<0.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2}
+function oBack(x,c){x=cl(x,0,1);c=c||1.9;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)}
+function mix(a,b,p){return [a[0]+(b[0]-a[0])*p,a[1]+(b[1]-a[1])*p,a[2]+(b[2]-a[2])*p]}
+function rgba(c,a){return 'rgba('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+','+cl(a,0,1).toFixed(3)+')'}
+function lerp(a,b,p){return a+(b-a)*p}
+function rr(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r)}
+function box(x,y,w,h,r,fill,stroke,lw){ rr(x,y,w,h,r);
+  if(fill){ctx.fillStyle=fill;ctx.fill();} if(stroke){ctx.lineWidth=lw||1;ctx.strokeStyle=stroke;ctx.stroke();} }
+function T(s,x,y,size,w,col,align){ ctx.font=w+' '+size+'px Poppins'; ctx.textAlign=align||'left';
+  ctx.textBaseline='middle'; ctx.fillStyle=col; ctx.fillText(s,x,y); }
+function G(ch,x,y,size,col,fab){ ctx.font=(fab?'400 ':'900 ')+size+'px '+(fab?'FAB':'FAS');
+  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle=col; ctx.fillText(ch,x,y); }
+function bez(x1,y1,x2,y2){
+  function A(a,b){return 1-3*b+3*a} function B(a,b){return 3*b-6*a} function C(a){return 3*a}
+  function f(t,a,b){return ((A(a,b)*t+B(a,b))*t+C(a))*t}
+  function d(t,a,b){return 3*A(a,b)*t*t+2*B(a,b)*t+C(a)}
+  return function(x){ if(x<=0)return 0; if(x>=1)return 1; var t=x;
+    for(var i=0;i<8;i++){var s=d(t,x1,x2); if(!s)break; t-=(f(t,x1,x2)-x)/s;}
+    return f(t,y1,y2); };
+}
+var eB=bez(.22,1,.36,1), REV=0.70;
+function show(el,t,T0){ var p=eB((t-T0)/REV); el.style.opacity=p.toFixed(3);
+  el.style.transform='translateY('+(28*(1-p)).toFixed(2)+'px)'; }
+function hide(el,t,T0){ if(t<T0) return; var p=oCubic((t-T0)/0.40);
+  el.style.opacity=(parseFloat(el.style.opacity||1)*(1-p)).toFixed(3);
+  el.style.transform='translateY('+(-26*p).toFixed(2)+'px)'; }
+
+/* ---- logos ---- */
+var LOGO={};
+function prep(im,mode){
+  var c=document.createElement('canvas'); c.width=im.width; c.height=im.height;
+  var g=c.getContext('2d'); g.drawImage(im,0,0);
+  var d=g.getImageData(0,0,c.width,c.height), p=d.data, x0=1e9,y0=1e9,x1=-1,y1=-1;
+  for(var i=0;i<p.length;i+=4){
+    var r=p[i],gg=p[i+1],b=p[i+2],a=p[i+3];
+    if(mode==='blip'){
+      var mx=Math.max(r,gg,b), mn=Math.min(r,gg,b), lum=(r+gg+b)/3;
+      if(mx-mn<30){ var na=cl((247-lum)/247,0,1); if(na<0.03) na=0;
+        p[i]=255;p[i+1]=255;p[i+2]=255;p[i+3]=(na*255)|0; }
+      else { var dd=Math.max(Math.abs(r-247),Math.abs(gg-247),Math.abs(b-247));
+        p[i]=1;p[i+1]=150;p[i+2]=250;p[i+3]=(cl(dd/55,0,1)*255)|0; }
+    } else { var l2=(r+gg+b)/3; p[i]=255;p[i+1]=255;p[i+2]=255;p[i+3]=(a*(l2/255))|0; }
+    if(p[i+3]>12){ var px=(i/4)%c.width, py=((i/4)/c.width)|0;
+      if(px<x0)x0=px; if(px>x1)x1=px; if(py<y0)y0=py; if(py>y1)y1=py; }
+  }
+  g.putImageData(d,0,0); return {c:c,x:x0,y:y0,w:x1-x0+1,h:y1-y0+1};
+}
+function logo(L,cx,cy,tw,al){ if(!L||al<=0.003) return; var s=tw/L.w, th=L.h*s;
+  var ga=ctx.globalAlpha; ctx.globalAlpha=ga*al;
+  ctx.drawImage(L.c,L.x,L.y,L.w,L.h,cx-tw/2,cy-th/2,tw,th); ctx.globalAlpha=ga; }
+window.ASSETS_READY=new Promise(function(res){
+  var n=0; function done(){ if(++n===2){ Promise.all([
+      document.fonts.load('400 30px FAB',I.wa),document.fonts.load('900 30px FAS',allFas),
+      document.fonts.load('400 40px Poppins'),document.fonts.load('600 40px Poppins'),
+      document.fonts.load('700 40px Poppins'),document.fonts.load('800 40px Poppins')
+    ]).then(function(){res(true)}); } }
+  function ld(src,mode,key){ var im=new Image(); im.onload=function(){LOGO[key]=prep(im,mode);done()};
+    im.onerror=done; im.src=src; }
+  ld(window.IMG_BLIP,'blip','blip'); ld(window.IMG_BEENO,'beeno','beeno');
+});
+
+/* =================== a conversa =================== */
+var PX=150, PY=302, PW=780, PH=880;
+var MAXW=520;
+
+/* balao: side 0 = lead (esquerda), 1 = vendedor (direita) */
+function msg(x,y,w,h,side,warm,a,lines,time,ticks){
+  if(a<=0.01) return;
+  var col=mix(C_DK,C_WA,warm);
+  ctx.globalAlpha=a;
+  var bx=side?x-w:x;
+  /* rabinho */
+  ctx.beginPath();
+  if(side){ ctx.moveTo(bx+w-18,y+h-4); ctx.lineTo(bx+w+14,y+h+16); ctx.lineTo(bx+w-4,y+h-22); }
+  else    { ctx.moveTo(bx+18,y+h-4);   ctx.lineTo(bx-14,y+h+16);   ctx.lineTo(bx+4,y+h-22); }
+  ctx.closePath(); ctx.fillStyle='rgba(9,26,20,.88)'; ctx.fill();
+  box(bx,y,w,h,22,'rgba(9,26,20,.88)');
+  box(bx,y,w,h,22,rgba(col,0.08+0.11*warm));
+  box(bx,y,w,h,22,null,rgba(col,0.20+0.55*warm),2.5);
+  for(var i=0;i<lines.length;i++)
+    T(lines[i],bx+28,y+40+i*40,30,500,'rgba(255,255,255,'+(0.48+0.44*warm)+')');
+  T(time,bx+w-26,y+h-26,22,500,'rgba(255,255,255,.40)','right');
+  if(side&&ticks){ var tc=ticks===2?rgba(C_LT,0.9*warm+0.25):'rgba(255,255,255,.40)';
+    G(I.check,bx+w-84,y+h-26,18,tc); G(I.check,bx+w-72,y+h-26,18,tc); }
+  ctx.globalAlpha=1;
+}
+function sysRow(y,txt,a,icon,warm){
+  if(a<=0.01) return;
+  ctx.globalAlpha=a;
+  ctx.font='600 26px Poppins'; var w=ctx.measureText(txt).width+108;
+  box(540-w/2,y-26,w,52,26,rgba(C_BR,0.14),rgba(C_BR,0.55),2);
+  G(icon,540-w/2+34,y,22,rgba(C_LT,1));
+  T(txt,540-w/2+60,y+1,26,600,'rgb(200,240,222)');
+  ctx.globalAlpha=1;
+}
+function chat(t,warm,alpha,revived){
+  if(alpha<=0.01) return;
+  ctx.globalAlpha=alpha;
+  ctx.save(); ctx.shadowColor='rgba(0,0,0,.5)'; ctx.shadowBlur=50; ctx.shadowOffsetY=16;
+  box(PX,PY,PW,PH,30,'rgba(9,26,20,.88)'); ctx.restore();
+  box(PX,PY,PW,PH,30,null,'rgba(255,255,255,.16)',2);
+  /* cabecalho */
+  ctx.beginPath(); ctx.arc(PX+62,PY+62,30,0,6.2832); ctx.fillStyle='rgba(255,255,255,.12)'; ctx.fill();
+  G(I.user,PX+62,PY+62,26,'rgba(255,255,255,.55)');
+  T('Mariana Souza',PX+112,PY+50,32,700,'#FFFFFF');
+  var st=revived?'online agora':(warm<0.5?'visto há 5 dias':'online');
+  T(st,PX+112,PY+80,24,500,revived?rgba(C_LT,1):'rgba(255,255,255,.42)');
+  G(I.wa,PX+PW-54,PY+62,30,rgba(mix(C_DK,C_WA,warm),0.95),true);
+  ctx.fillStyle='rgba(255,255,255,.12)'; ctx.fillRect(PX+20,PY+116,PW-40,2);
+  ctx.globalAlpha=1;
+}
+function composeBar(y,a,typing,sent){
+  if(a<=0.01) return;
+  ctx.globalAlpha=a;
+  box(PX+26,y,PW-52,86,43,'rgba(255,255,255,.05)','rgba(255,255,255,.16)',2);
+  T(sent?'Mensagem enviada pelo Beeno':'Escreva uma mensagem...',PX+64,y+43,27,500,
+    sent?rgba(C_LT,1):'rgba(255,255,255,.34)');
+  G(I.clip,PX+PW-146,y+43,24,'rgba(255,255,255,.38)');
+  ctx.beginPath(); ctx.arc(PX+PW-84,y+43,28,0,6.2832);
+  ctx.fillStyle=sent?rgba(C_BR,0.9):'rgba(255,255,255,.10)'; ctx.fill();
+  G(I.mic,PX+PW-84,y+43,22,sent?'#0A1C15':'rgba(255,255,255,.45)');
+  ctx.globalAlpha=1;
+}
+function typing(x,y,a,t){
+  if(a<=0.01) return;
+  ctx.globalAlpha=a;
+  box(x-150,y-32,150,64,32,'rgba(9,26,20,.88)','rgba(255,255,255,.14)',2);
+  for(var i=0;i<3;i++){
+    ctx.beginPath(); ctx.arc(x-108+i*34,y,8,0,6.2832);
+    ctx.fillStyle='rgba(255,255,255,'+(0.26+0.34*(0.5+0.5*Math.sin(t*9-i*1.0)))+')'; ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+
+/* =================== fim do mes: volume x venda =================== */
+var BASEY=1128, BARW=210, B1X=270, B2X=630, BMAX=560;
+function bars(t,a){
+  if(a<=0.01) return;
+  ctx.globalAlpha=a;
+  /* chao */
+  ctx.fillStyle='rgba(255,255,255,.14)'; ctx.fillRect(170,BASEY,740,3);
+  var p1=oQuart(cl((t-(T_VOL+0.10))/1.30,0,1));
+  var h1=BMAX*p1;
+  var g=ctx.createLinearGradient(0,BASEY-h1,0,BASEY);
+  g.addColorStop(0,rgba(C_WA,0.85)); g.addColorStop(1,rgba(C_WA,0.35));
+  box(B1X,BASEY-h1,BARW,h1,18,'rgba(9,26,20,.88)');
+  box(B1X,BASEY-h1,BARW,h1,18,g);
+  box(B1X,BASEY-h1,BARW,h1,18,null,rgba(C_WA,0.75),2.5);
+  var n=Math.round(184*p1);
+  T(String(n),B1X+BARW/2,BASEY-h1-66,58,800,'#FFFFFF','center');
+  T('conversas',B1X+BARW/2,BASEY-h1-24,28,600,rgba([160,220,190],1),'center');
+  T('CONVERSAS',B1X+BARW/2,BASEY+38,26,700,'rgba(255,255,255,.55)','center');
+  /* a barra que nao veio */
+  var p2=cl((t-(T_SEMV+0.05))/0.7,0,1);
+  var h2=26*p2;
+  box(B2X,BASEY-h2,BARW,Math.max(h2,4),10,rgba(C_DK,0.9));
+  ctx.save(); ctx.setLineDash([14,12]); ctx.lineWidth=3.5;
+  var gh=BMAX*oCubic(cl((t-(T_SEMV+0.15))/0.6,0,1));
+  box(B2X,BASEY-gh,BARW,gh,18,null,rgba(C_RD,0.85*cl((t-(T_SEMV+0.1))/0.5,0,1)));
+  ctx.restore();
+  var fk=Math.sin(t*12.4)*0.5+0.5;
+  var qa=cl((t-(T_SEMV+0.45))/0.4,0,1)*(fk>0.4?1:0.35);
+  T('0',B2X+BARW/2,BASEY-gh/2-22,92,800,rgba([255,255,255],qa),'center');
+  T('vendas',B2X+BARW/2,BASEY-gh/2+40,30,600,rgba([255,150,150],qa),'center');
+  T('VENDAS',B2X+BARW/2,BASEY+38,26,700,'rgba(255,255,255,.55)','center');
+  ctx.globalAlpha=1;
+}
+
+function seek(t){
+  ctx.clearRect(0,0,1080,1920);
+  var sx=0, sy=0;
+  [[T_NING,9],[T_SEMV+0.5,8],[T_BEENO,12],[T_CRM,5]].forEach(function(q){ var dk=t-q[0];
+    if(dk>0&&dk<0.34){var m=q[1]*Math.exp(-dk*15); sy+=m*Math.sin(dk*66); sx+=m*0.45*Math.sin(dk*58);} });
+  shake.style.transform='translate('+sx.toFixed(2)+'px,'+sy.toFixed(2)+'px)';
+
+  /* a luz da marca some junto com a conversa e volta com o Beeno */
+  var warmth=(1-cl((t-(T_ESFR+0.25))/1.30,0,1));
+  var g1=cl(oCubic((t-T_LEAD)/0.8),0,1)*warmth*(1-cl((t-(T_FIM-0.3))/0.5,0,1));
+  var g2=cl(oCubic((t-T_BEENO)/0.7),0,1);
+  aur.style.opacity=Math.max(g1*0.8,g2).toFixed(3);
+
+  /* ================= ATO 1: a conversa que esfria ================= */
+  var a1=cl(oCubic((t-T_LEAD)/0.45),0,1)*(1-cl((t-(T_FIM-0.45))/0.5,0,1));
+  if(a1>0.01){
+    chat(t,warmth,a1,false);
+    var m0=cl(oBack((t-T_LEAD)/0.45,2.0),0,1.06);
+    if(m0>0.01){ ctx.globalAlpha=a1; msg(PX+40,PY+170,MAXW,124,0,warmth,cl(m0,0,1),
+      ['Oi! Vi o anúncio de vocês.','Queria entender os planos.'],'10:12',0); ctx.globalAlpha=1; }
+    var m1=cl(oBack((t-T_RESP)/0.45,2.0),0,1.06);
+    if(m1>0.01){ ctx.globalAlpha=a1; msg(PX+PW-40,PY+326,MAXW-40,124,1,warmth,cl(m1,0,1),
+      ['Claro! Temos 3 planos.','Posso te explicar agora?'],'10:14',2); ctx.globalAlpha=1; }
+    var m2=cl(oBack((t-T_ESFR)/0.45,2.0),0,1.06);
+    if(m2>0.01){ ctx.globalAlpha=a1; msg(PX+40,PY+482,MAXW-120,84,0,warmth,
+      cl(m2,0,1),['Depois eu te falo, tá?'],'10:15',0); ctx.globalAlpha=1; }
+    /* o tempo passa */
+    var sep=cl((t-(T_ESFR+0.85))/0.5,0,1)*a1;
+    if(sep>0.01){ ctx.globalAlpha=sep;
+      ctx.font='600 26px Poppins'; var s='há 5 dias'; var w=ctx.measureText(s).width+44;
+      box(540-w/2,PY+596,w,46,23,'rgba(255,255,255,.07)','rgba(255,255,255,.16)',2);
+      T(s,540,PY+620,26,600,'rgba(255,255,255,.45)','center'); ctx.globalAlpha=1; }
+    /* o vendedor comeca a digitar... e desiste */
+    var ty=cl((t-(T_NING-0.55))/0.25,0,1)*(1-cl((t-(T_NING+0.05))/0.3,0,1))*a1;
+    typing(PX+PW-40,PY+700,ty,t);
+    composeBar(PY+PH-116,a1,0,false);
+    /* nada mais acontece */
+    var dead=cl((t-(T_NING+0.40))/0.6,0,1)*a1;
+    if(dead>0.02){
+      ctx.globalAlpha=dead;
+      ctx.font='700 30px Poppins'; var s2='ninguém voltou'; var w2=ctx.measureText(s2).width+92;
+      box(540-w2/2,PY+671,w2,58,29,'rgba(255,101,104,.12)',rgba(C_RD,0.7),2.5);
+      T(s2,540+14,PY+701,30,700,'rgb(255,150,152)','center');
+      ctx.beginPath(); ctx.moveTo(540-w2/2+30,PY+689); ctx.lineTo(540-w2/2+52,PY+711);
+      ctx.moveTo(540-w2/2+52,PY+689); ctx.lineTo(540-w2/2+30,PY+711);
+      ctx.lineWidth=5; ctx.lineCap='round'; ctx.strokeStyle=rgba(C_RD,0.95); ctx.stroke();
+      ctx.globalAlpha=1;
+    }
+  }
+
+  /* ================= ATO 2: volume sem venda ================= */
+  var a2=cl(oCubic((t-T_FIM)/0.5),0,1)*(1-cl((t-(T_BEENO-0.35))/0.45,0,1));
+  if(a2>0.01){
+    var dy=26*(1-eB((t-T_FIM)/REV));
+    ctx.save(); ctx.translate(0,dy);
+    ctx.globalAlpha=a2;
+    ctx.font='700 30px Poppins'; var cs='fim do mês'; var cw=ctx.measureText(cs).width+96;
+    box(540-cw/2,388,cw,64,32,'rgba(255,255,255,.06)','rgba(255,255,255,.18)',2);
+    G(I.calendar,540-cw/2+38,420,24,'rgba(255,255,255,.65)');
+    T(cs,540+18,421,30,700,'rgba(255,255,255,.80)','center');
+    ctx.globalAlpha=1;
+    bars(t,a2);
+    ctx.restore();
+  }
+
+  /* ================= ATO 3: o Beeno ================= */
+  var a3=cl(oCubic((t-T_BEENO)/0.5),0,1);
+  if(a3>0.01&&SHOW_LOGO){
+    var pop=cl(oBack((t-T_BEENO)/0.7,1.7),0,1.06);
+    var up=eB((t-(T_CRM-0.55))/0.75);
+    var ly=lerp(720,206,up), lw=lerp(560,300,up);
+    /* estouro de luz na virada */
+    var bl=Math.exp(-Math.max(0,t-T_BEENO)*2.2);
+    if(bl>0.02){ ctx.beginPath(); ctx.arc(540,720,120+520*oCubic((t-T_BEENO)/0.9),0,6.2832);
+      ctx.lineWidth=10*bl+0.5; ctx.strokeStyle=rgba(C_LT,0.55*bl); ctx.stroke(); }
+    logo(LOGO.beeno,lerp(540,392,up),ly,lw*pop,a3);
+    /* a Blip entra do lado */
+    var bp=eB((t-T_BLIP)/0.75);
+    if(bp>0.005){
+      ctx.save(); ctx.translate(0,(1-bp)*16); ctx.globalAlpha=bp;
+      ctx.save(); ctx.translate(596,ly); ctx.rotate(((t-T_BLIP)*2.2)%(Math.PI*2));
+      G(I.sync,0,0,30,rgba(C_LT,1)); ctx.restore();
+      logo(LOGO.blip,740,ly,208,1);
+      ctx.globalAlpha=1; ctx.restore();
+    }
+  }
+  /* a mesma conversa, agora viva e com o CRM dentro dela */
+  var a4=cl(oCubic((t-T_CRM)/0.55),0,1);
+  if(a4>0.01){
+    ctx.save(); ctx.translate(0,26*(1-eB((t-T_CRM)/REV)));
+    chat(t,1,a4,true);
+    ctx.globalAlpha=a4;
+    msg(PX+40,PY+170,MAXW,124,0,1,1,['Oi! Vi o anúncio de vocês.','Queria entender os planos.'],'10:12',0);
+    ctx.globalAlpha=1;
+    sysRow(PY+352,'Negócio criado · Lead recebido',cl(oBack((t-(T_CRM+0.30))/0.5,2.0),0,1.06)*a4,I.plus,1);
+    var mA=cl(oBack((t-(T_CRM+0.95))/0.5,2.0),0,1.06)*a4;
+    if(mA>0.01){ ctx.globalAlpha=1;
+      msg(PX+PW-40,PY+412,MAXW-20,124,1,1,mA,
+        ['Oi Mariana! Retomando aqui:','consigo te mostrar hoje, 16h?'],'09:02',2);
+      /* a etiqueta que mostra que o disparo foi do Beeno */
+      var tg=cl((t-(T_CRM+1.20))/0.4,0,1)*mA;
+      if(tg>0.02){ ctx.globalAlpha=tg;
+        ctx.font='700 24px Poppins'; var s3='follow-up automático'; var w3=ctx.measureText(s3).width+72;
+        box(PX+PW-40-w3,PY+552,w3,48,24,rgba(C_BR,0.16),rgba(C_BR,0.75),2);
+        G(I.bolt,PX+PW-40-w3+28,PY+576,18,rgba(C_LT,1));
+        T(s3,PX+PW-40-w3+50,PY+577,24,700,'rgb(200,240,222)');
+        ctx.globalAlpha=1; }
+    }
+    var mB=cl(oBack((t-(T_CRM+1.95))/0.5,2.0),0,1.06)*a4;
+    if(mB>0.01){ ctx.globalAlpha=1;
+      msg(PX+40,PY+612,MAXW-160,84,0,1,mB,['Perfeito, pode ser!'],'09:04',0); ctx.globalAlpha=1; }
+    sysRow(PY+730,'Negócio movido · Reunião agendada',
+      cl(oBack((t-(T_CRM+2.55))/0.5,2.0),0,1.06)*a4,I.check,1);
+    composeBar(PY+PH-116,a4,0,t>=T_CRM+1.0);
+    ctx.restore();
+  }
+
+  /* ================= texto ================= */
+  show(E.a0,t,T_LEAD); show(E.a1,t,T_RESP); show(E.a2,t,T_ESFR); show(E.a3,t,T_NING);
+  [E.a0,E.a1,E.a2,E.a3].forEach(function(el,i){ hide(el,t,T_FIM-0.34+i*0.04) });
+  show(E.b0,t,T_FIM); show(E.b1,t,T_VOL); show(E.b2,t,T_SEMV);
+  [E.b0,E.b1,E.b2].forEach(function(el,i){ hide(el,t,T_BEENO-0.34+i*0.04) });
+  show(E.c0,t,T_BEENO); show(E.c1,t,T_BEENO+0.42);
+  hide(E.c0,t,T_CRM-0.32); hide(E.c1,t,T_CRM-0.28);
+  show(E.d0,t,T_CRM); show(E.d1,t,T_BLIP);
+}
+window.seek=seek; window.DUR=DUR;
+window.ASSETS_READY.then(function(){ seek(0) });
+seek(0);
+</script></body></html>

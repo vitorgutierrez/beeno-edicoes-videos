@@ -1,0 +1,337 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
+<link rel="stylesheet" href="poppins.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#stage{position:relative;width:1080px;height:1920px;font-family:'Poppins',sans-serif;
+  -webkit-font-smoothing:antialiased}
+#bg{position:absolute;inset:0;display:none;background:#0A1C15}
+body.dark #bg{display:block}
+/* a grade de 56px do proprio Beeno */
+#bg::after{content:'';position:absolute;inset:0;
+  background-image:linear-gradient(90deg,rgba(255,255,255,.043) 1px,transparent 1px),
+                   linear-gradient(rgba(255,255,255,.043) 1px,transparent 1px);
+  background-size:56px 56px}
+#aur{position:absolute;left:540px;top:520px;width:1560px;height:1560px;margin:-780px 0 0 -780px;
+  opacity:0;will-change:opacity;
+  background:radial-gradient(circle,rgba(0,205,138,.22) 0%,rgba(0,205,138,.085) 42%,rgba(0,205,138,0) 70%)}
+#shake{position:absolute;inset:0;will-change:transform}
+#fx{position:absolute;left:0;top:0}
+
+/* ---------- chips "ninguem sabe" ---------- */
+.chip{position:absolute;top:870px;width:390px;height:130px;border-radius:16px;
+  border:2px dashed rgba(255,255,255,.22);background:rgba(9,26,20,.55);
+  box-shadow:0 6px 26px rgba(0,0,0,.45);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  opacity:0;will-change:opacity,transform}
+#k0{left:140px} #k1{left:550px}
+.chip u{text-decoration:none;font-size:25px;font-weight:600;letter-spacing:.13em;
+  color:#8CA096;text-transform:uppercase;line-height:1;text-shadow:0 2px 10px rgba(0,0,0,.8)}
+.chip s{text-decoration:none;font-size:62px;font-weight:800;color:#C3D4CC;line-height:1;
+  text-shadow:0 3px 14px rgba(0,0,0,.8);will-change:opacity}
+
+/* ---------- bloco 1: o lead entra / a conversa e otima / e some ---------- */
+.ln{position:absolute;left:0;right:0;text-align:center;line-height:1;
+  text-shadow:0 3px 18px rgba(0,0,0,.85);opacity:0;will-change:opacity,transform}
+#t1{top:1300px;font-size:56px;font-weight:600;letter-spacing:-.018em;color:#A9BDB4}
+#t2{top:1390px;font-size:56px;font-weight:600;letter-spacing:-.018em;color:#A9BDB4}
+#t3{top:1490px;font-size:96px;font-weight:800;letter-spacing:-.032em;color:#FFFFFF}
+
+/* ---------- bloco 2: sem funil / sem cadencia / sem saber ---------- */
+.neg{position:absolute;left:216px;display:flex;align-items:center;gap:28px;
+  font-size:57px;font-weight:700;letter-spacing:-.024em;color:#E4EEE9;white-space:nowrap;
+  line-height:1;text-shadow:0 3px 18px rgba(0,0,0,.85);opacity:0;
+  will-change:opacity,transform}
+.neg i{display:block;width:38px;height:38px;flex:0 0 auto;position:relative}
+.neg i::before,.neg i::after{content:'';position:absolute;left:-2px;top:17px;width:42px;height:5px;
+  border-radius:3px;background:#FF6568}
+.neg i::before{transform:rotate(45deg)} .neg i::after{transform:rotate(-45deg)}
+#n0{top:1292px} #n1{top:1382px} #n2{top:1472px} #n3{top:1562px}
+</style></head><body><div id="stage">
+<div id="bg"><div id="aur"></div></div>
+<div id="shake">
+  <canvas id="fx" width="1080" height="1920"></canvas>
+
+  <div class="chip" id="k0"><u>Fechou</u><s>?</s></div>
+  <div class="chip" id="k1"><u>Ficou para trás</u><s>?</s></div>
+
+  <div class="ln" id="t1">O lead entra.</div>
+  <div class="ln" id="t2">A conversa é ótima.</div>
+  <div class="ln" id="t3">E some.</div>
+
+  <div class="neg" id="n0"><i></i>sem funil</div>
+  <div class="neg" id="n1"><i></i>sem cadência</div>
+  <div class="neg" id="n2"><i></i>sem saber o que fechou</div>
+  <div class="neg" id="n3"><i></i>nem o que ficou para trás</div>
+</div>
+</div>
+<script>
+/* ==================================================================
+   TEMPOS — e aqui que se casa com a fala. Locucao de referencia:
+   "O lead entra, a conversa e otima e some!
+    nao tem funil, nao tem cadencia, ninguem sabendo o que fechou
+    e o que ficou para tras"
+   ================================================================== */
+var T_LEAD  = 0.25;   /* "O lead entra"            */
+var T_CONV  = 1.15;   /* "a conversa e otima"      */
+var T_SOME  = 2.45;   /* "e some!"  <- o estouro   */
+var T_FUNIL = 3.40;   /* "nao tem funil"           */
+var T_CAD   = 4.40;   /* "nao tem cadencia"        */
+var T_NOSE  = 5.60;   /* "ninguem sabendo o que fechou" */
+var T_TRAS  = 7.30;   /* "e o que ficou para tras" */
+var DUR     = 10.40;
+
+/* paleta Beeno */
+var C_BRAND=[0,205,138], C_LIGHT=[95,226,179], C_DEAD=[110,131,122];
+
+var shake=document.getElementById('shake'),
+    cv=document.getElementById('fx'), ctx=cv.getContext('2d');
+var t1=document.getElementById('t1'), t2=document.getElementById('t2'),
+    t3=document.getElementById('t3');
+var negs=[0,1,2,3].map(function(i){return document.getElementById('n'+i)});
+var T_NEG=[T_FUNIL,T_CAD,T_NOSE,T_TRAS];
+var aur=document.getElementById('aur');
+var chips=[document.getElementById('k0'),document.getElementById('k1')];
+var qm=[chips[0].querySelector('s'),chips[1].querySelector('s')];
+
+function cl(v,a,b){return v<a?a:(v>b?b:v)}
+function oCubic(x){x=cl(x,0,1);return 1-Math.pow(1-x,3)}
+function oBack(x,c){x=cl(x,0,1);c=c||1.9;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)}
+function mix(a,b,p){return [a[0]+(b[0]-a[0])*p,a[1]+(b[1]-a[1])*p,a[2]+(b[2]-a[2])*p]}
+function rgba(c,a){return 'rgba('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+','+a.toFixed(3)+')'}
+function rr(x,y,w,h,rd){ctx.beginPath();ctx.roundRect(x,y,w,h,rd)}
+
+/* easing oficial do site: cubic-bezier(.22,1,.36,1) em 0.7s */
+function bez(x1,y1,x2,y2){
+  function A(a,b){return 1-3*b+3*a} function B(a,b){return 3*b-6*a} function C(a){return 3*a}
+  function f(t,a,b){return ((A(a,b)*t+B(a,b))*t+C(a))*t}
+  function d(t,a,b){return 3*A(a,b)*t*t+2*B(a,b)*t+C(a)}
+  return function(x){ if(x<=0)return 0; if(x>=1)return 1; var t=x;
+    for(var i=0;i<8;i++){var s=d(t,x1,x2); if(!s)break; t-=(f(t,x1,x2)-x)/s;}
+    return f(t,y1,y2); };
+}
+var eBeeno=bez(.22,1,.36,1);
+var REV=0.70;                                  /* duracao do reveal do site */
+/* entrada padrao da marca: opacity 0->1 + translateY(28px)->0 */
+function reveal(el,t,T,dy){
+  var p=eBeeno((t-T)/REV);
+  el.style.opacity=p.toFixed(3);
+  el.style.transform='translateY('+((dy===undefined?28:dy)*(1-p)).toFixed(2)+'px)';
+  return p;
+}
+function fadeOut(el,t,T,dur,up){
+  if(t<T) return 1;
+  var p=oCubic((t-T)/(dur||0.45));
+  el.style.opacity=((el.style.opacity||1)*1*(1-p)).toFixed(3);
+  el.style.transform='translateY('+(-(up||22)*p).toFixed(2)+'px)';
+  return 1-p;
+}
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296}}
+var rnd=mulberry32(20260908);
+
+/* ---------- geometria ---------- */
+var HX=540, HY=560;                            /* onde o lead heroi para   */
+var FT=780, FB=1010, FL=250, FR=830, FN=176;   /* funil fantasma           */
+var CY=1124, CX0=326, CX1=754, NC=5;           /* trilho de cadencia       */
+var YTOP=170, YEND=1180;                       /* queda dos leads          */
+
+/* ---------- leads de fundo: chegam sem ritmo nenhum ---------- */
+var LEADS=[];
+var SP=[2.60,3.05,3.62,3.95,4.55,5.30,5.62,6.10,6.85,7.20,7.55,8.30,8.75,9.20];
+var LX=[380,662,470,724,330,600,506,758,420,640,300,700,545,455];
+for(var i=0;i<SP.length;i++) LEADS.push({t0:SP[i],x:LX[i],fall:2.55+rnd()*0.7});
+
+/* ---------- estilhacos do lead heroi ---------- */
+var PART=[];
+for(var p=0;p<18;p++){
+  var an=rnd()*6.2832, sp=210+rnd()*430;
+  PART.push({vx:Math.cos(an)*sp, vy:Math.sin(an)*sp*0.6-90, r:5+rnd()*9, life:0.60+rnd()*0.60});
+}
+
+/* ---------- baloes da conversa ---------- */
+var BUB=[{x:612,y:440,w:262,h:74,d:0.00,l:1},
+         {x:206,y:534,w:274,h:74,d:0.28,l:0},
+         {x:596,y:632,w:238,h:74,d:0.56,l:1}];
+
+function seek(t){
+  ctx.clearRect(0,0,1080,1920);
+
+  /* ---- tranco nos acentos ---- */
+  var sx=0, sy=0;
+  [[T_SOME,13],[T_FUNIL,6],[T_CAD,6],[T_NOSE,7],[T_TRAS,6]].forEach(function(a,n){
+    var dk=t-a[0];
+    if(dk>0&&dk<0.34){var m=a[1]*Math.exp(-dk*15); sy+=m*Math.sin(dk*66); sx+=m*0.45*Math.sin(dk*58);}
+  });
+  shake.style.transform='translate('+sx.toFixed(2)+'px,'+sy.toFixed(2)+'px)';
+
+  /* ---- a aurora verde do Beeno: acesa no comeco, apagando depois do "some" ---- */
+  var rise=cl(oCubic((t-T_LEAD)/0.6),0,1);
+  var glow=rise*(1-0.82*cl((t-T_SOME)/2.2,0,1));   /* aurora de fundo (so no dark) */
+  var bloom=rise*(1-cl((t-T_SOME)/1.10,0,1));      /* brilho do proprio lead   */
+  aur.style.opacity=glow.toFixed(3);
+  /* no canvas fica so o bloom do proprio lead — o alpha nao carrega fundo nenhum */
+  if(bloom>0.01){
+    var g=ctx.createRadialGradient(HX,HY-30,0,HX,HY-30,380);
+    g.addColorStop(0,rgba(C_BRAND,0.16*bloom));
+    g.addColorStop(0.42,rgba(C_BRAND,0.055*bloom));
+    g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g; ctx.fillRect(HX-380,HY-410,760,760);
+  }
+
+  /* ================= funil fantasma: o desenho de algo que nao existe ======= */
+  var fA=cl(oCubic((t-T_FUNIL)/0.55),0,1)*(1-cl((t-T_NOSE)/0.5,0,1));
+  if(fA>0.01){
+    var draw=oCubic((t-T_FUNIL)/0.75);
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0,FT-40,1080,(FB-FT+60)*draw); ctx.clip();
+    ctx.setLineDash([17,21]); ctx.lineWidth=3; ctx.lineCap='round';
+    ctx.strokeStyle='rgba(255,255,255,'+(0.15*fA).toFixed(3)+')';
+    ctx.beginPath(); ctx.moveTo(FL,FT); ctx.lineTo(FR,FT); ctx.stroke();
+    /* as laterais vem quebradas de proposito */
+    [[0,.36],[.50,.86]].forEach(function(s){
+      ctx.beginPath();
+      ctx.moveTo(FL+(HX-FN/2-FL)*s[0], FT+(FB-FT)*s[0]);
+      ctx.lineTo(FL+(HX-FN/2-FL)*s[1], FT+(FB-FT)*s[1]); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(FR+(HX+FN/2-FR)*s[0], FT+(FB-FT)*s[0]);
+      ctx.lineTo(FR+(HX+FN/2-FR)*s[1], FT+(FB-FT)*s[1]); ctx.stroke();
+    });
+    /* o gargalo — a boca por onde nada sai */
+    ctx.beginPath(); ctx.moveTo(HX-FN/2,FB); ctx.lineTo(HX-FN/2,FB+46); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(HX+FN/2,FB); ctx.lineTo(HX+FN/2,FB+46); ctx.stroke();
+    ctx.setLineDash([]); ctx.restore();
+  }
+
+  /* ================= trilho de cadencia: dispara uma vez e morre ============ */
+  var cA=cl(oCubic((t-T_CAD)/0.5),0,1)*(1-cl((t-T_NOSE)/0.5,0,1));
+  if(cA>0.01){
+    var dr=oCubic((t-T_CAD)/0.7);
+    ctx.save();
+    ctx.beginPath(); ctx.rect(CX0-56,CY-72,(CX1-CX0+112)*dr,144); ctx.clip();
+    ctx.setLineDash([13,16]); ctx.lineWidth=2.5; ctx.lineCap='round';
+    ctx.strokeStyle='rgba(255,255,255,'+(0.14*cA).toFixed(3)+')';
+    ctx.beginPath(); ctx.moveTo(CX0,CY); ctx.lineTo(CX1,CY); ctx.stroke();
+    ctx.setLineDash([]);
+    for(var k=0;k<NC;k++){
+      var kx=CX0+(CX1-CX0)*k/(NC-1);
+      /* so o primeiro toque acontece; o segundo mal acende; o resto e vazio */
+      var fire=(k===0)?Math.exp(-Math.max(0,t-(T_CAD+0.24))*0.85)
+              :(k===1)?0.30*Math.exp(-Math.max(0,t-(T_CAD+0.55))*1.7):0;
+      ctx.beginPath(); ctx.arc(kx,CY,16,0,6.2832);
+      if(fire>0.02){
+        ctx.fillStyle=rgba(mix(C_DEAD,C_BRAND,cl(fire,0,1)),(0.55+0.45*fire)*cA); ctx.fill();
+        var rip=cl((t-(T_CAD+0.24)-k*0.31)/0.75,0,1);
+        if(rip<1){
+          ctx.beginPath(); ctx.arc(kx,CY,16+46*rip,0,6.2832);
+          ctx.lineWidth=3.5*(1-rip)+0.5;
+          ctx.strokeStyle=rgba(C_BRAND,0.5*(1-rip)*cA); ctx.stroke();
+        }
+      } else {
+        ctx.lineWidth=2.5; ctx.strokeStyle='rgba(255,255,255,'+(0.19*cA).toFixed(3)+')'; ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  /* ================= os leads que caem e apagam ============================= */
+  for(var n=0;n<LEADS.length;n++){
+    var L=LEADS[n], age=t-L.t0;
+    if(age<0) continue;
+    var pr=age/L.fall; if(pr>1.12) continue;
+    var y=YTOP+(YEND-YTOP)*Math.pow(cl(pr,0,1),1.22);
+    var live=1-cl((age-0.50)/0.55,0,1);            /* verde vira cinza */
+    var col=mix(C_DEAD,C_BRAND,live);
+    var a=cl(age/0.18,0,1)*(1-cl((y-990)/180,0,1));
+    if(a<=0.01) continue;
+    if(live>0.02){
+      ctx.beginPath(); ctx.arc(L.x,y,34*live,0,6.2832);
+      ctx.fillStyle=rgba(C_BRAND,0.17*live*a); ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(L.x,y,15,0,6.2832); ctx.fillStyle=rgba(col,0.95*a); ctx.fill();
+    ctx.beginPath(); ctx.arc(L.x,y,6.5,0,6.2832);
+    ctx.fillStyle=rgba(mix(col,[255,255,255],0.55),0.9*a); ctx.fill();
+  }
+
+  /* ================= o lead heroi ========================================== */
+  var hA=cl((t-T_LEAD)/0.30,0,1);
+  var hy=-60+(HY+60)*cl(oBack((t-T_LEAD)/0.70,1.55),0,1.06);
+  var dead=t-T_SOME;
+  /* piscada de agonia: a conversa treme antes de sumir */
+  if(t>T_SOME-0.20 && t<T_SOME) hA*=(Math.sin((t-T_SOME)*95)>0?1:0.30);
+  if(hA>0.01 && dead<0.02){
+    var conv=cl((t-T_CONV)/0.45,0,1);
+    var pul=1+0.09*Math.sin(t*7.5)*conv;
+    var hcol=mix(C_BRAND,C_LIGHT,conv*0.55);
+    /* halo que cresce enquanto a conversa esta boa */
+    ctx.beginPath(); ctx.arc(HX,hy,(44+26*conv)*pul,0,6.2832);
+    ctx.fillStyle=rgba(C_BRAND,(0.13+0.13*conv)*hA); ctx.fill();
+    if(conv>0.02){
+      ctx.beginPath(); ctx.arc(HX,hy,(70+30*conv)*pul,0,6.2832);
+      ctx.lineWidth=2.5; ctx.strokeStyle=rgba(C_BRAND,0.22*conv*hA); ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(HX,hy,25*pul,0,6.2832); ctx.fillStyle=rgba(hcol,0.97*hA); ctx.fill();
+    ctx.beginPath(); ctx.arc(HX,hy,11*pul,0,6.2832);
+    ctx.fillStyle='rgba(255,255,255,'+(0.95*hA).toFixed(3)+')'; ctx.fill();
+
+    /* baloes da conversa */
+    for(var b=0;b<BUB.length;b++){
+      var B=BUB[b], bp=cl(oBack((t-(T_CONV+B.d))/0.42,2.1),0,1.06);
+      var out=cl((t-(T_SOME-0.10))/0.20,0,1);
+      var ba=bp*(1-out); if(ba<=0.01) continue;
+      var s=0.72+0.28*bp;
+      ctx.save();
+      ctx.translate(B.x+B.w/2,B.y+B.h/2); ctx.scale(s,s); ctx.translate(-(B.x+B.w/2),-(B.y+B.h/2));
+      ctx.globalAlpha=ba;
+      rr(B.x,B.y,B.w,B.h,22); ctx.fillStyle='rgba(9,26,20,.72)'; ctx.fill();
+      rr(B.x,B.y,B.w,B.h,22); ctx.fillStyle=rgba(C_BRAND,0.14); ctx.fill();
+      ctx.lineWidth=2.5; ctx.strokeStyle=rgba(C_BRAND,0.50); ctx.stroke();
+      /* linhas de texto dentro do balao */
+      for(var q=0;q<2;q++){
+        rr(B.x+26,B.y+24+q*20,(B.w-52)*(q?0.58:0.86),9,5);
+        ctx.fillStyle='rgba(255,255,255,'+(q?0.30:0.46)+')'; ctx.fill();
+      }
+      ctx.globalAlpha=1; ctx.restore();
+    }
+  }
+
+  /* ---- o estouro: some ---- */
+  if(dead>=0 && dead<1.35){
+    var bl=Math.exp(-dead*3.4);
+    ctx.beginPath(); ctx.arc(HX,HY,34+430*oCubic(dead/0.72),0,6.2832);
+    ctx.lineWidth=11*bl+0.5; ctx.strokeStyle=rgba(C_LIGHT,0.55*bl); ctx.stroke();
+    ctx.beginPath(); ctx.arc(HX,HY,20+250*oCubic(dead/0.50),0,6.2832);
+    ctx.lineWidth=6*bl+0.5; ctx.strokeStyle=rgba(C_DEAD,0.40*bl); ctx.stroke();
+    for(var p2=0;p2<PART.length;p2++){
+      var P=PART[p2], pa=1-cl(dead/P.life,0,1); if(pa<=0.01) continue;
+      var px=HX+P.vx*dead, py=HY+P.vy*dead+340*dead*dead;
+      ctx.beginPath(); ctx.arc(px,py,P.r*(0.35+0.65*pa),0,6.2832);
+      ctx.fillStyle=rgba(mix(C_DEAD,C_BRAND,pa*0.7),0.8*pa); ctx.fill();
+    }
+  }
+
+  /* ================= texto ================================================= */
+  /* bloco 1 */
+  reveal(t1,t,T_LEAD); reveal(t2,t,T_CONV);
+  var p3=eBeeno((t-T_SOME)/0.42);                 /* "E some." entra seco */
+  t3.style.opacity=p3.toFixed(3);
+  t3.style.transform='translateY('+(16*(1-p3)).toFixed(2)+'px) scale('+(1.10-0.10*p3).toFixed(3)+')';
+  [t1,t2,t3].forEach(function(el,i){ fadeOut(el,t,T_FUNIL-0.30+i*0.05,0.40,26) });
+
+  /* bloco 2: sem funil / sem cadencia / sem saber */
+  for(var m=0;m<4;m++) reveal(negs[m],t,T_NEG[m]);
+
+  /* chips sem resposta */
+  var kp=cl(oCubic((t-T_NOSE)/0.55),0,1);
+  for(var c=0;c<2;c++){
+    var kd=c*0.14, kpp=eBeeno((t-(T_NOSE+kd))/REV);
+    chips[c].style.opacity=kpp.toFixed(3);
+    chips[c].style.transform='translateY('+(28*(1-kpp)).toFixed(2)+'px)';
+    /* a interrogacao pisca: ninguem consegue responder */
+    var fk=Math.sin(t*13.7+c*3.1)*0.5+0.5;
+    qm[c].style.opacity=(kpp*(fk>0.42?1:0.3)).toFixed(3);
+  }
+}
+window.seek=seek; window.DUR=DUR; seek(0);
+</script></body></html>

@@ -37,7 +37,7 @@ def plain(c, t, sc):
 
 
 def cta_full(c, t, sc):
-    """CTA no estilo RVOPS: pílula com seta para baixo apontando para o botão do anúncio."""
+    """CTA: pílula com seta para baixo apontando para o botão do anúncio."""
     if "items" in sc:
         headline(c, t, sc["items"], sc.get("head_y", 250), sc.get("size", 76))
     txt, tm = sc["button"]
@@ -176,7 +176,7 @@ _PARTICLES = Particles()
 
 
 def dots(c, t, sc):
-    """Partículas + chips à esquerda (como na RVOPS) + rótulos + marca em caixa contornada."""
+    """Partículas + chips à esquerda + rótulos + marca em caixa contornada."""
     _PARTICLES.draw(c, t, sc["t0"], sc.get("green_t"), sc.get("conv_t"), sc.get("logo_t"))
     gone = 1 - ease_out((t - sc["conv_t"]) / 0.4) if "conv_t" in sc and t >= sc["conv_t"] else 1
     for txt, x, y, tm in sc.get("labels", []):

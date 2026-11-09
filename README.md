@@ -1,6 +1,12 @@
 # Beeno — edições de reels
 
-Reels do Beeno editados com a mesma linguagem dos ADs da RVOPS (ADS 05), com a identidade visual do [beeno.ai](https://beeno.ai).
+Reels do Beeno editados numa linguagem sóbria/documental, com a identidade visual do [beeno.ai](https://beeno.ai).
+
+## Guia de edição (`guia-edicao/`)
+
+Estilo da Beeno, repertório de técnicas, checklist de revisão, roteiro/copy e pipeline de entrega:
+comece por [`guia-edicao/README.md`](guia-edicao/README.md). Ferramentas de apoio em `ferramentas/`,
+componentes Remotion em `remotion/` e inserções em HTML em `motion-html/`.
 
 ## Entregas (`output/`)
 
@@ -17,7 +23,7 @@ no template das capas do perfil (fundo escuro com brilho verde, traço verde, t�
 
 ## Conceito (v5, após feedback)
 
-Linguagem sóbria/documental dos ADs da RVOPS:
+Linguagem sóbria/documental:
 
 - Cortes secos em toda pausa acima de 0,2s; bordas de cada corte ajustadas pela energia do
   áudio para não comer palavras. Começa na primeira palavra, termina logo após a última

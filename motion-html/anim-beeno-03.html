@@ -1,0 +1,448 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
+<link rel="stylesheet" href="poppins.css">
+<link rel="stylesheet" href="beeno-icons.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#stage{position:relative;width:1080px;height:1920px;font-family:'Poppins',sans-serif;
+  -webkit-font-smoothing:antialiased}
+#bg{position:absolute;inset:0;display:none;background:#0A1C15}
+body.dark #bg{display:block}
+#bg::after{content:'';position:absolute;inset:0;
+  background-image:linear-gradient(90deg,rgba(255,255,255,.043) 1px,transparent 1px),
+                   linear-gradient(rgba(255,255,255,.043) 1px,transparent 1px);
+  background-size:56px 56px}
+/* aurora: so no fundo escuro, nunca no canvas */
+#aur{position:absolute;left:540px;top:700px;width:1700px;height:1700px;margin:-850px 0 0 -850px;
+  opacity:0;will-change:opacity;
+  background:radial-gradient(circle,rgba(0,205,138,.20) 0%,rgba(0,205,138,.075) 42%,rgba(0,205,138,0) 70%)}
+#shake{position:absolute;inset:0;will-change:transform}
+#fx{position:absolute;left:0;top:0}
+.pre{position:absolute;left:-9999px;top:0;font-size:20px}
+
+.ln{position:absolute;left:0;right:0;text-align:center;line-height:1.06;
+  text-shadow:0 3px 18px rgba(0,0,0,.85);opacity:0;will-change:opacity,transform}
+.big{font-size:84px;font-weight:800;letter-spacing:-.032em;color:#FFFFFF}
+.sml{font-size:52px;font-weight:600;letter-spacing:-.018em;color:#A9BDB4}
+.g{color:#5FE2B3} .r{color:#FF6568}
+
+#a1{top:1290px} #a2{top:1370px} #a3{top:1462px}
+#b1{top:1300px} #b2{top:1384px}
+#c1{top:1300px} #c2{top:1384px}
+
+/* linhas com x vermelho — mesma linguagem de dor da peca 01 */
+.neg{position:absolute;left:170px;display:flex;align-items:center;gap:28px;
+  font-size:54px;font-weight:700;letter-spacing:-.024em;color:#E4EEE9;white-space:nowrap;
+  line-height:1;text-shadow:0 3px 18px rgba(0,0,0,.85);opacity:0;
+  will-change:opacity,transform}
+.neg i{display:block;width:38px;height:38px;flex:0 0 auto;position:relative}
+.neg i::before,.neg i::after{content:'';position:absolute;left:-2px;top:17px;width:42px;height:5px;
+  border-radius:3px;background:#FF6568}
+.neg i::before{transform:rotate(45deg)} .neg i::after{transform:rotate(-45deg)}
+#x0{top:1310px} #x1{top:1406px}
+</style></head><body><div id="stage">
+<div id="bg"><div id="aur"></div></div>
+<div id="shake">
+  <canvas id="fx" width="1080" height="1920"></canvas>
+
+  <div class="ln sml" id="a1">O WhatsApp virou</div>
+  <div class="ln big" id="a2">o principal canal</div>
+  <div class="ln big g" id="a3">de vendas.</div>
+
+  <div class="ln sml" id="b1">mas a maioria trata como</div>
+  <div class="ln big" id="b2">caixa de mensagens.</div>
+
+  <div class="neg" id="x0"><i></i>conversa em cada celular</div>
+  <div class="neg" id="x1"><i></i>follow-up que ninguém faz</div>
+
+  <div class="ln sml" id="c1">e no fim do mês…</div>
+  <div class="ln big" id="c2">o número <span class="r">não veio.</span></div>
+</div>
+<!-- forca o carregamento das fontes de icone usadas so no canvas -->
+<span class="pre" style="font-family:FAB">&#xf232;</span>
+<span class="pre" style="font-family:FAS;font-weight:900">&#xf0f3;&#xf11e;&#xf133;&#xf007;</span>
+</div>
+<script>
+/* ==================================================================
+   TEMPOS — casar com a locucao:
+   "O WhatsApp virou o principal canal de vendas do Brasil,
+    so que a maioria das empresas tratam ele como uma caixa de mensagens,
+    conversas espalhadas no celular de cada vendedor,
+    follow-up que ninguem faz,
+    e no fim do mes ninguem sabe explicar porque o numero nao veio"
+   ("o numero" = a meta de fechamento da empresa)
+   ================================================================== */
+var T_WA    = 0.25;   /* icone do WhatsApp entra              */
+var T_CANAL = 0.60;   /* "O WhatsApp virou o principal canal" */
+var T_CAIXA = 3.30;   /* "so que a maioria... caixa de mensagens" */
+var T_ESP   = 7.10;   /* "conversas espalhadas no celular..." */
+var T_FUP   = 9.50;   /* "follow-up que ninguem faz"          */
+var T_FIM   = 11.00;  /* "e no fim do mes"                    */
+var T_NVEIO = 12.90;  /* "...o numero nao veio"  <- a meta para */
+var DUR     = 16.00;
+
+var META_PCT = 0.58;  /* onde a barra da meta empaca */
+
+/* paleta */
+var C_BR=[0,205,138], C_LT=[95,226,179], C_DK=[110,131,122], C_WA=[37,211,102],
+    C_RD=[255,101,104];
+
+var shake=document.getElementById('shake'),
+    cv=document.getElementById('fx'), ctx=cv.getContext('2d'),
+    aur=document.getElementById('aur');
+var E={}; ['a1','a2','a3','b1','b2','x0','x1','c1','c2'].forEach(function(id){E[id]=document.getElementById(id)});
+
+function cl(v,a,b){return v<a?a:(v>b?b:v)}
+function oCubic(x){x=cl(x,0,1);return 1-Math.pow(1-x,3)}
+function oQuart(x){x=cl(x,0,1);return 1-Math.pow(1-x,4)}
+function iQuad(x){x=cl(x,0,1);return x*x}
+function ioCubic(x){x=cl(x,0,1);return x<0.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2}
+function oBack(x,c){x=cl(x,0,1);c=c||1.9;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)}
+function mix(a,b,p){return [a[0]+(b[0]-a[0])*p,a[1]+(b[1]-a[1])*p,a[2]+(b[2]-a[2])*p]}
+function rgba(c,a){return 'rgba('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+','+cl(a,0,1).toFixed(3)+')'}
+function rr(x,y,w,h,rd){ctx.beginPath();ctx.roundRect(x,y,w,h,rd)}
+function lerp(a,b,p){return a+(b-a)*p}
+var DEG=Math.PI/180;
+
+/* easing oficial do site */
+function bez(x1,y1,x2,y2){
+  function A(a,b){return 1-3*b+3*a} function B(a,b){return 3*b-6*a} function C(a){return 3*a}
+  function f(t,a,b){return ((A(a,b)*t+B(a,b))*t+C(a))*t}
+  function d(t,a,b){return 3*A(a,b)*t*t+2*B(a,b)*t+C(a)}
+  return function(x){ if(x<=0)return 0; if(x>=1)return 1; var t=x;
+    for(var i=0;i<8;i++){var s=d(t,x1,x2); if(!s)break; t-=(f(t,x1,x2)-x)/s;}
+    return f(t,y1,y2); };
+}
+var eB=bez(.22,1,.36,1), REV=0.70;
+function show(el,t,T,dy){
+  var p=eB((t-T)/REV);
+  el.style.opacity=p.toFixed(3);
+  el.style.transform='translateY('+((dy===undefined?28:dy)*(1-p)).toFixed(2)+'px)';
+}
+function hide(el,t,T,dur,up){
+  if(t<T) return;
+  var p=oCubic((t-T)/(dur||0.42));
+  el.style.opacity=(parseFloat(el.style.opacity||1)*(1-p)).toFixed(3);
+  el.style.transform='translateY('+(-(up||24)*p).toFixed(2)+'px)';
+}
+function glyph(fam,ch,x,y,size,col){
+  ctx.font=(fam==='FAS'?'900 ':'400 ')+size+'px '+fam;
+  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle=col;
+  ctx.fillText(ch,x,y);
+}
+function txt(s,x,y,size,weight,col,align){
+  ctx.font=weight+' '+size+'px Poppins';
+  ctx.textAlign=align||'center'; ctx.textBaseline='middle'; ctx.fillStyle=col;
+  ctx.fillText(s,x,y);
+}
+
+window.ASSETS_READY=Promise.all([
+  document.fonts.load('400 40px FAB',''),
+  document.fonts.load('900 40px FAS',''),
+  document.fonts.load('800 40px Poppins'),document.fonts.load('700 40px Poppins'),
+  document.fonts.load('600 40px Poppins')
+]).then(function(){return true});
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296}}
+var rnd=mulberry32(160926);
+
+/* ================= cena 1: tudo chega no WhatsApp ======================= */
+var WX=540, WY=700;
+var BUBS=[];
+for(var i=0;i<26;i++){
+  /* angulos estratificados: chega de todo lado, nunca de baixo (area do texto) */
+  var ang=(-200+(((i*11)%26)+rnd()*0.8)/26*220)*DEG;
+  BUBS.push({t0:T_WA+0.30+i*0.088+rnd()*0.05, ang:ang, r0:560+rnd()*120,
+             w:128+rnd()*44, flip:Math.cos(ang)>0, dur:0.80+rnd()*0.25});
+}
+
+/* ================= cena 2: a caixa de mensagens ========================= */
+var PNX=150, PNY=470, PNW=780, PNH=680;
+var RW=732, RHh=94, RH=108, LIST_Y=PNY+96+RHh/2, CLIP_B=PNY+PNH-12;
+var ROWS=[];
+for(var j=0;;j++){
+  var ti=T_CAIXA+0.40+j*0.27;
+  if(ti>T_ESP-0.25) break;
+  ROWS.push({ti:ti, av:rnd(), w1:0.40+rnd()*0.32, w2:0.55+rnd()*0.35, badge:1+((rnd()*38)|0)});
+}
+var NR=ROWS.length;
+function rowDepth(j,t){
+  var d=0;
+  for(var k=j+1;k<NR;k++) d+=eB((t-ROWS[k].ti)/0.38);
+  return d;
+}
+
+/* ================= cena 3: um celular por vendedor ====================== */
+var PH_W=250, PH_H=500;
+var PHONES=[{x:200,y:846,r:-6},{x:540,y:796,r:2.5},{x:880,y:852,r:5.5}];
+function phoneAt(p,t){
+  var P=PHONES[p], dr=eB((t-(T_ESP+0.9))/1.6);
+  var sp=(p-1)*22*dr;                              /* vao se afastando */
+  var ex=eB((t-T_FIM)/0.6);                        /* saem de cena no fim do mes */
+  return {x:P.x+sp, y:P.y+120*ex, r:(P.r+(p-1)*2.5*dr)*DEG, ex:ex};
+}
+function inPhone(ph,dx,dy){                        /* ponto no referencial girado do celular */
+  var c=Math.cos(ph.r), s=Math.sin(ph.r);
+  return {x:ph.x+dx*c-dy*s, y:ph.y+dx*s+dy*c};
+}
+
+function drawRow(cx,cy,w,h,rot,a,R,sat){
+  if(a<=0.01) return;
+  ctx.save(); ctx.translate(cx,cy); ctx.rotate(rot); ctx.globalAlpha=a;
+  rr(-w/2,-h/2,w,h,h*0.22); ctx.fillStyle='rgba(9,26,20,.80)'; ctx.fill();
+  ctx.lineWidth=1.5; rr(-w/2,-h/2,w,h,h*0.22); ctx.strokeStyle='rgba(255,255,255,.13)'; ctx.stroke();
+  var ax=-w/2+h*0.50;
+  ctx.beginPath(); ctx.arc(ax,0,h*0.30,0,6.2832);
+  ctx.fillStyle='rgba(255,255,255,'+(0.16+0.16*R.av).toFixed(3)+')'; ctx.fill();
+  var bx=-w/2+h*0.95, bw=w-h*0.95-h*0.95;
+  ctx.fillStyle='rgba(255,255,255,.64)'; rr(bx,-h*0.22,bw*R.w1,h*0.14,h*0.07); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.28)'; rr(bx,h*0.08,bw*R.w2,h*0.12,h*0.06); ctx.fill();
+  var bxc=w/2-h*0.46;
+  ctx.beginPath(); ctx.arc(bxc,0,h*0.23,0,6.2832);
+  ctx.fillStyle=rgba(mix(C_DK,C_WA,sat),0.95); ctx.fill();
+  ctx.font='800 '+Math.round(h*0.25)+'px Poppins'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillStyle='#0A1C15'; ctx.fillText(String(R.badge),bxc,h*0.015);
+  ctx.restore();
+}
+
+function drawPhone(ph,a,sc){
+  if(a<=0.01) return;
+  ctx.save(); ctx.translate(ph.x,ph.y); ctx.rotate(ph.r); ctx.scale(sc,sc); ctx.globalAlpha=a;
+  ctx.shadowColor='rgba(0,0,0,.5)'; ctx.shadowBlur=40; ctx.shadowOffsetY=14;
+  rr(-PH_W/2,-PH_H/2,PH_W,PH_H,40); ctx.fillStyle='rgba(9,26,20,.90)'; ctx.fill();
+  ctx.shadowColor='transparent';
+  ctx.lineWidth=3; rr(-PH_W/2,-PH_H/2,PH_W,PH_H,40); ctx.strokeStyle='rgba(255,255,255,.26)'; ctx.stroke();
+  rr(-40,-PH_H/2+16,80,12,6); ctx.fillStyle='rgba(255,255,255,.20)'; ctx.fill();
+  /* cabecalho do app */
+  ctx.fillStyle='rgba(255,255,255,.40)'; rr(-PH_W/2+22,-PH_H/2+50,96,12,6); ctx.fill();
+  ctx.restore();
+}
+
+/* ================= cena 5: a meta do mes ================================ */
+var BX=130, BY=880, BW=820, BH=80;
+function metaProg(t){ return cl((t-(T_FIM+0.35))/((T_NVEIO+0.10)-(T_FIM+0.35)),0,1) }
+
+function seek(t){
+  ctx.clearRect(0,0,1080,1920);
+
+  /* ---- trancos ---- */
+  var sx=0, sy=0;
+  [[T_CAIXA+0.1,5],[T_ESP+0.35,7],[T_FUP+1.0,5],[T_NVEIO,13]].forEach(function(a){
+    var dk=t-a[0];
+    if(dk>0&&dk<0.34){var m=a[1]*Math.exp(-dk*15); sy+=m*Math.sin(dk*66); sx+=m*0.45*Math.sin(dk*58);}
+  });
+  shake.style.transform='translate('+sx.toFixed(2)+'px,'+sy.toFixed(2)+'px)';
+
+  aur.style.opacity=(cl(oCubic((t-T_WA)/0.8),0,1)*(1-0.7*cl((t-T_FIM)/1.8,0,1))).toFixed(3);
+
+  /* =================== o icone do WhatsApp ============================== */
+  var wIn=cl(oBack((t-T_WA)/0.55,1.8),0,1.08);
+  var wMv=eB((t-T_CAIXA)/0.80);
+  var wOut=1-cl((t-(T_FIM-0.1))/0.5,0,1);
+  if(wIn>0.01 && wOut>0.01){
+    var wx=WX, wy=lerp(WY,372,wMv), wr=lerp(118,58,wMv)*wIn;
+    /* chegadas: um pulso a cada conversa que entra */
+    var hit=0;
+    for(var i=0;i<BUBS.length;i++){ var dk=t-(BUBS[i].t0+BUBS[i].dur); if(dk>0&&dk<0.5) hit=Math.max(hit,1-dk/0.5); }
+    ctx.globalAlpha=wOut;
+    ctx.beginPath(); ctx.arc(wx,wy,wr*(1.55+0.18*hit),0,6.2832);
+    ctx.fillStyle=rgba(C_WA,0.12+0.10*hit); ctx.fill();
+    ctx.beginPath(); ctx.arc(wx,wy,wr,0,6.2832); ctx.fillStyle=rgba(C_WA,1); ctx.fill();
+    glyph('FAB','',wx,wy+wr*0.02,Math.round(wr*1.22),'#FFFFFF');
+    /* selo de nao lidas no icone */
+    var arrived=0;
+    for(var i2=0;i2<BUBS.length;i2++) if(t>=BUBS[i2].t0+BUBS[i2].dur) arrived++;
+    var tot=arrived;
+    for(var j2=0;j2<NR;j2++) if(t>=ROWS[j2].ti) tot+=ROWS[j2].badge;
+    if(tot>0){
+      var bs=lerp(1,0.62,wMv), bxp=wx+wr*0.74, byp=wy-wr*0.74;
+      var lbl=String(tot), bw2=Math.max(60,26+lbl.length*22)*bs;
+      rr(bxp-bw2/2,byp-30*bs,bw2,60*bs,30*bs); ctx.fillStyle=rgba(C_RD,1); ctx.fill();
+      ctx.lineWidth=5*bs; rr(bxp-bw2/2,byp-30*bs,bw2,60*bs,30*bs); ctx.strokeStyle='#0A1C15'; ctx.stroke();
+      txt(lbl,bxp,byp+1,Math.round(34*bs),800,'#FFFFFF');
+    }
+    ctx.globalAlpha=1;
+  }
+
+  /* baloes chegando de todo lado */
+  for(var b=0;b<BUBS.length;b++){
+    var B=BUBS[b], p=(t-B.t0)/B.dur;
+    if(p<0||p>1) continue;
+    var e=iQuad(p), rad=lerp(B.r0,150,e);
+    var x=WX+Math.cos(B.ang)*rad, y=WY+Math.sin(B.ang)*rad*0.9;
+    var a=cl(p/0.16,0,1)*(1-cl((p-0.80)/0.20,0,1));
+    var w=B.w*(1-0.55*e), h=w*0.50;
+    ctx.globalAlpha=a;
+    /* balao com rabinho, virado pro lado de onde veio */
+    var tx=B.flip? x+w/2-h*0.30 : x-w/2+h*0.30;
+    ctx.beginPath(); ctx.moveTo(tx-h*0.18,y+h/2-2); ctx.lineTo(tx+(B.flip?h*0.30:-h*0.30),y+h/2+h*0.26);
+    ctx.lineTo(tx+h*0.18,y+h/2-2); ctx.closePath(); ctx.fillStyle='rgba(9,26,20,.86)'; ctx.fill();
+    rr(x-w/2,y-h/2,w,h,h*0.34); ctx.fillStyle='rgba(9,26,20,.86)'; ctx.fill();
+    ctx.lineWidth=2.5; rr(x-w/2,y-h/2,w,h,h*0.34); ctx.strokeStyle=rgba(C_WA,0.70); ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.62)'; rr(x-w*0.34,y-h*0.20,w*0.62,h*0.15,h*0.08); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.30)'; rr(x-w*0.34,y+h*0.07,w*0.40,h*0.13,h*0.07); ctx.fill();
+    ctx.globalAlpha=1;
+  }
+
+  /* =================== a caixa de mensagens ============================= */
+  var pnA=cl(oCubic((t-(T_CAIXA+0.15))/0.5),0,1)*(1-cl((t-(T_ESP+0.10))/0.45,0,1));
+  if(pnA>0.01){
+    ctx.globalAlpha=pnA;
+    ctx.save(); ctx.shadowColor='rgba(0,0,0,.5)'; ctx.shadowBlur=44; ctx.shadowOffsetY=14;
+    rr(PNX,PNY,PNW,PNH,26); ctx.fillStyle='rgba(9,26,20,.88)'; ctx.fill(); ctx.restore();
+    ctx.lineWidth=1.5; rr(PNX,PNY,PNW,PNH,26); ctx.strokeStyle='rgba(255,255,255,.15)'; ctx.stroke();
+    txt('Conversas',PNX+40,PNY+50,40,700,'rgba(255,255,255,.92)','left');
+    var unread=0; for(var u=0;u<NR;u++) if(t>=ROWS[u].ti) unread+=ROWS[u].badge;
+    for(var u2=0;u2<BUBS.length;u2++) if(t>=BUBS[u2].t0+BUBS[u2].dur) unread++;
+    var ul=unread+' não lidas';
+    ctx.font='700 30px Poppins'; var uw=ctx.measureText(ul).width+44;
+    rr(PNX+PNW-40-uw,PNY+28,uw,46,23); ctx.fillStyle=rgba(C_WA,0.18); ctx.fill();
+    ctx.lineWidth=1.5; rr(PNX+PNW-40-uw,PNY+28,uw,46,23); ctx.strokeStyle=rgba(C_WA,0.55); ctx.stroke();
+    txt(ul,PNX+PNW-40-uw/2,PNY+52,30,700,rgba([150,240,185],1));
+    ctx.globalAlpha=1;
+  }
+
+  /* =================== celulares ======================================== */
+  var phV=[];
+  for(var p2=0;p2<3;p2++){
+    var ph=phoneAt(p2,t);
+    var pa=cl(oCubic((t-(T_ESP+0.15+p2*0.08))/0.5),0,1)*(1-ph.ex);
+    var sc=0.92+0.08*eB((t-(T_ESP+0.15+p2*0.08))/0.6);
+    phV.push({ph:ph,a:pa});
+    drawPhone(ph,pa,sc);
+    if(pa>0.01){
+      var lp=inPhone(ph,0,PH_H/2+40);
+      ctx.save(); ctx.translate(lp.x,lp.y); ctx.rotate(ph.r); ctx.globalAlpha=pa;
+      glyph('FAS','',-94,0,24,'rgba(255,255,255,.45)');
+      txt('Vendedor '+(p2+1),10,2,28,600,'rgba(255,255,255,.55)');
+      ctx.restore(); ctx.globalAlpha=1;
+    }
+  }
+
+  /* =================== as conversas: caixa -> celulares ================= */
+  var satAll=1-cl((t-(T_FUP+0.55))/0.5,0,1);
+  if(t<T_ESP){
+    ctx.save(); rr(PNX+6,PNY+86,PNW-12,PNH-98,20); ctx.clip();
+    for(var r=0;r<NR;r++){
+      var R=ROWS[r]; if(t<R.ti) continue;
+      var cy=LIST_Y+rowDepth(r,t)*RH;
+      if(cy-RHh/2>CLIP_B) continue;
+      drawRow(540,cy,RW,RHh,0,cl((t-R.ti)/0.30,0,1)*pnA,R,1);
+    }
+    ctx.restore();
+  }else{
+    for(var r2=0;r2<NR;r2++){
+      var R2=ROWS[r2];
+      var k=NR-1-r2;                                  /* 0 = a mais recente */
+      var cy0=LIST_Y+rowDepth(r2,T_ESP)*RH;
+      var vis=cl((CLIP_B-(cy0-RHh/2))/RHh,0,1);
+      if(k>=9){
+        drawRow(540,cy0,RW,RHh,0,vis*(1-cl((t-T_ESP)/0.3,0,1)),R2,1);
+        continue;
+      }
+      var pi=k%3, sl=(k/3)|0;
+      var PV=phV[pi], m=eB((t-(T_ESP+0.05+k*0.045))/0.80);
+      var tg=inPhone(PV.ph,0,-PH_H/2+118+sl*80);
+      var cx=lerp(540,tg.x,m), cyy=lerp(cy0,tg.y,m);
+      var ww=lerp(RW,206,m), hh=lerp(RHh,66,m), rot=lerp(0,PV.ph.r,m);
+      var al=lerp(vis,1,m)*(1-PV.ph.ex);
+      drawRow(cx,cyy,ww,hh,rot,al*(0.55+0.45*satAll),R2,satAll);
+    }
+  }
+
+  /* =================== follow-up: aparece e ninguem faz ================= */
+  for(var f=0;f<3;f++){
+    var PF=phV[f], T0=T_FUP+f*0.16;
+    if(t<T0) continue;
+    var pop=cl(oBack((t-T0)/0.42,2.2),0,1.08);
+    var gray=cl((t-(T0+0.55))/0.35,0,1);
+    var gone=eB((t-(T0+0.95))/0.55);
+    var ca=cl(pop,0,1)*(1-gone)*PF.a;
+    if(ca<=0.01) continue;
+    var cp=inPhone(PF.ph,0,PH_H/2-86);
+    ctx.save(); ctx.translate(cp.x,cp.y); ctx.rotate(PF.ph.r);
+    ctx.translate(110*gone,24*gone); ctx.scale(0.7+0.3*pop,0.7+0.3*pop); ctx.globalAlpha=ca;
+    var col=mix(C_BR,C_DK,gray);
+    rr(-120,-34,240,68,34); ctx.fillStyle='rgba(9,26,20,.92)'; ctx.fill();
+    rr(-120,-34,240,68,34); ctx.fillStyle=rgba(col,0.16); ctx.fill();
+    ctx.lineWidth=2.5; rr(-120,-34,240,68,34); ctx.strokeStyle=rgba(col,0.75); ctx.stroke();
+    /* o sino balanca enquanto espera */
+    ctx.save(); ctx.translate(-84,-1); ctx.rotate(Math.sin((t-T0)*18)*0.35*(1-gray)*Math.exp(-(t-T0)*1.2));
+    glyph('FAS','',0,0,28,rgba(mix(C_LT,C_DK,gray),1)); ctx.restore();
+    txt('Follow-up',22,2,30,700,rgba(mix(C_LT,[160,175,168],gray),1));
+    ctx.restore(); ctx.globalAlpha=1;
+  }
+
+  /* =================== fim do mes: a meta que nao veio ================== */
+  var mA=cl(oCubic((t-(T_FIM+0.12))/0.55),0,1);
+  if(mA>0.01){
+    var prog=metaProg(t);
+    var dyIn=26*(1-eB((t-(T_FIM+0.12))/REV));
+    var fail=cl((t-T_NVEIO)/0.5,0,1);
+
+    /* calendario correndo ate o dia 30 */
+    var day=1+Math.floor(29*ioCubic(prog));
+    var CX=540, CY=596+dyIn, CW=226, CH=246;
+    ctx.globalAlpha=mA;
+    ctx.save(); ctx.shadowColor='rgba(0,0,0,.5)'; ctx.shadowBlur=36; ctx.shadowOffsetY=12;
+    rr(CX-CW/2,CY-CH/2,CW,CH,24); ctx.fillStyle='rgba(9,26,20,.92)'; ctx.fill(); ctx.restore();
+    ctx.lineWidth=2; rr(CX-CW/2,CY-CH/2,CW,CH,24); ctx.strokeStyle='rgba(255,255,255,.20)'; ctx.stroke();
+    ctx.save(); rr(CX-CW/2,CY-CH/2,CW,68,24); ctx.clip();
+    ctx.fillStyle=rgba(mix([60,78,70],C_RD,fail),0.95); ctx.fillRect(CX-CW/2,CY-CH/2,CW,68);
+    ctx.restore();
+    glyph('FAS','',CX-50,CY-CH/2+35,30,'rgba(255,255,255,.9)');
+    txt('MÊS',CX+16,CY-CH/2+36,31,700,'rgba(255,255,255,.92)');
+    var tick=(prog>0&&prog<1)?1:0;
+    txt((day<10?'0':'')+day,CX,CY+38+2*tick*Math.sin(t*60),112,800,rgba(mix([255,255,255],C_RD,fail*0.85),1));
+
+    /* barra da meta */
+    var by=BY+dyIn;
+    rr(BX,by,BW,BH,BH/2); ctx.fillStyle='rgba(9,26,20,.82)'; ctx.fill();
+    ctx.lineWidth=2; rr(BX,by,BW,BH,BH/2); ctx.strokeStyle='rgba(255,255,255,.20)'; ctx.stroke();
+    var frac=META_PCT*oQuart(prog);
+    if(frac>0.002){
+      var fw=Math.max(BH,BW*frac);
+      var gcol=mix(C_BR,C_DK,fail*0.75);
+      var gr=ctx.createLinearGradient(BX,0,BX+fw,0);
+      gr.addColorStop(0,rgba(mix(gcol,[0,0,0],0.25),1)); gr.addColorStop(1,rgba(mix(gcol,C_LT,0.35*(1-fail)),1));
+      rr(BX+5,by+5,fw-10,BH-10,(BH-10)/2); ctx.fillStyle=gr; ctx.fill();
+      txt(Math.round(frac*100)+'%',BX+fw-10,by-48,48,800,rgba(mix(C_LT,[200,210,205],fail),1));
+    }
+    /* a linha da meta */
+    ctx.save(); ctx.setLineDash([10,10]); ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(BX+BW-2,by-30); ctx.lineTo(BX+BW-2,by+BH+30);
+    ctx.strokeStyle='rgba(255,255,255,.55)'; ctx.stroke(); ctx.restore();
+    glyph('FAS','',BX+BW-26,by+BH+76,40,'rgba(255,255,255,.85)');
+    txt('META',BX+BW-76,by+BH+78,38,700,'rgba(255,255,255,.85)','right');
+
+    /* o buraco entre o que veio e a meta */
+    if(fail>0.01){
+      var gx=BX+BW*META_PCT+8, gw=BX+BW-gx-4;
+      var drw=oCubic(fail);
+      ctx.save(); ctx.setLineDash([14,12]); ctx.lineWidth=3.5;
+      rr(gx,by-16,gw*drw,BH+32,26); ctx.strokeStyle=rgba(C_RD,0.85*fail); ctx.stroke(); ctx.restore();
+      rr(gx,by-16,gw*drw,BH+32,26); ctx.fillStyle=rgba(C_RD,0.12*fail); ctx.fill();
+      var fk=Math.sin(t*12.7)*0.5+0.5;
+      var qa=cl((t-(T_NVEIO+0.25))/0.35,0,1)*(fk>0.4?1:0.35);
+      txt('?',gx+gw/2,by+BH/2+4,104,800,rgba([255,255,255],qa));
+    }
+    ctx.globalAlpha=1;
+  }
+
+  /* =================== texto ============================================ */
+  show(E.a1,t,T_CANAL); show(E.a2,t,T_CANAL+0.30); show(E.a3,t,T_CANAL+0.95);
+  [E.a1,E.a2,E.a3].forEach(function(el,i){ hide(el,t,T_CAIXA-0.32+i*0.04,0.40,26) });
+
+  show(E.b1,t,T_CAIXA); show(E.b2,t,T_CAIXA+0.55);
+  [E.b1,E.b2].forEach(function(el,i){ hide(el,t,T_ESP-0.32+i*0.05,0.40,26) });
+
+  show(E.x0,t,T_ESP); show(E.x1,t,T_FUP);
+  [E.x0,E.x1].forEach(function(el,i){ hide(el,t,T_FIM-0.30+i*0.05,0.40,26) });
+
+  show(E.c1,t,T_FIM); show(E.c2,t,T_NVEIO);
+}
+window.seek=seek; window.DUR=DUR;
+window.ASSETS_READY.then(function(){ seek(0) });
+seek(0);
+</script></body></html>
