@@ -121,23 +121,23 @@ body { font-family: "ID", sans-serif; color: #fff; -webkit-font-smoothing: antia
 const FPS = 30;
 // Linha do tempo. Legendas: [início, fim, texto] em segundos relativos ao plano.
 const SCENES = [
-  { src: 'n21', off: 0.4, dur: 4.5, subs: [[0.3, 4.4, 'Todo fim de ano, toda empresa faz a mesma coisa.']] },
-  { kind: 'map', dur: 4.6, subs: [[0.1, 4.5, 'Olha para trás… e traça o <b>plano de voo</b> do ano seguinte.']] },
-  { src: 's01', off: 0.4, dur: 3.4, subs: [[0.1, 3.3, 'E, olhando para 2026, muita empresa voou <b>sem enxergar a rota.</b>']] },
-  { src: 's02', off: 0.4, dur: 2.6, subs: [[0.1, 2.5, 'Meta definida no feeling.']] },
-  { src: 's05', off: 0.4, dur: 3.2, subs: [[0.1, 3.1, 'Informação espalhada em planilhas, mensagens… e na cabeça de cada um.']] },
-  { src: 's04', off: 0.3, dur: 2.8, subs: [[0.1, 2.7, 'Decisões tomadas com o <b>dado de ontem.</b>']] },
-  { src: 's03', off: 0.6, dur: 2.6 },
-  { src: 's06', off: 0.4, dur: 3.0, subs: [[0.3, 2.9, 'Ninguém voa às cegas por escolha.']] },
-  { kind: 'card', dur: 2.2, big: 'Voa porque<br><b>falta visão.</b>' },
-  { src: 'n22', off: 0.4, dur: 5.6, subs: [[0.2, 2.9, 'Todo voo seguro tem uma coisa em comum:'], [3.0, 5.5, 'alguém que enxerga o todo. <b>Uma torre de controle.</b>']] },
-  { kind: 'beeno', dur: 11.0, subs: [[0.3, 2.6, 'Em vendas, essa torre é o <b>Beeno.</b>'], [2.8, 7.6, 'Cada contato, cada negócio, cada próximo passo… na mesma tela, em tempo real.'], [7.8, 10.9, 'Vendas e marketing olhando para <b>a mesma rota.</b>']] },
-  { src: 'n24', off: 0.3, dur: 3.6, subs: [[0.2, 3.5, '2027 não precisa ser um ano de mais esforço.']] },
-  { src: 'n25', off: 0.4, dur: 3.2, subs: [[0.1, 3.1, 'Precisa ser um ano de <b>mais visão.</b>']] },
-  { src: 's10', off: 1.4, dur: 3.0, subs: [[0.1, 2.9, 'Planeje a rota. Acompanhe cada etapa.']] },
-  { src: 'n23', off: 0.3, dur: 3.4, subs: [[0.2, 3.3, 'E chegue ao <b>destino.</b>']] },
-  { src: 's12', off: 0.4, dur: 3.0 },
-  { kind: 'end', dur: 6.0, subs: [[0.6, 5.8, 'Beeno. A torre de controle da sua operação comercial.']], hideSubs: true },
+  // tempos casados com a locução do Vitor (audio/vo-vitor.wav começa em 0s do filme)
+  { src: 'n21', off: 0.4, dur: 4.5, subs: [[0.8, 4.2, 'Todo fim de ano, toda empresa faz a mesma coisa.']] },
+  { kind: 'map', dur: 4.5, subs: [[0.1, 4.3, 'Olha para trás… e traça o <b>plano de voo</b> do ano seguinte.']] },
+  { src: 's01', off: 0.4, dur: 4.6, subs: [[0.1, 4.5, 'E, olhando para 2026, muita empresa voou <b>sem enxergar a rota.</b>']] },
+  { src: 's02', off: 0.4, dur: 2.0, subs: [[0.1, 1.95, 'Meta definida no feeling.']] },
+  { src: 's05', off: 0.3, dur: 4.3, subs: [[0.1, 4.2, 'Informação espalhada em planilhas, mensagens… e na cabeça de cada um.']] },
+  { src: 's04', off: 0.3, dur: 1.6, subs: [[0.3, 1.6, 'Decisões tomadas com o <b>dado de ontem.</b>']] },
+  { src: 's03', off: 0.6, dur: 1.4, subs: [[0.0, 1.3, 'Decisões tomadas com o <b>dado de ontem.</b>']] },
+  { src: 's06', off: 0.4, dur: 2.4, subs: [[0.2, 2.35, 'Ninguém voa às cegas por escolha.']] },
+  { kind: 'card', dur: 2.0, big: 'Voa porque<br><b>falta visão.</b>' },
+  { src: 'n22', off: 0.4, dur: 5.8, subs: [[0.3, 2.9, 'Todo voo seguro tem uma coisa em comum:'], [3.1, 5.7, 'alguém que enxerga o todo. <b>Uma torre de controle.</b>']] },
+  { kind: 'beeno', dur: 10.0, subs: [[0.2, 2.2, 'Em vendas, essa torre é o <b>Beeno.</b>'], [2.4, 7.1, 'Cada contato, cada negócio, cada próximo passo… na mesma tela, em tempo real.'], [7.4, 9.9, 'Vendas e marketing olhando para <b>a mesma rota.</b>']] },
+  { src: 'n24', off: 0.3, dur: 3.1, subs: [[0.4, 3.05, '2027 não precisa ser um ano de mais esforço.']] },
+  { src: 'n25', off: 0.4, dur: 1.9, subs: [[0.15, 1.85, 'Precisa ser um ano de <b>mais visão.</b>']] },
+  { src: 's10', off: 1.2, dur: 2.3, subs: [[0.3, 2.25, 'Planeje a rota. Acompanhe cada etapa.']] },
+  { src: 'n23', off: 0.3, dur: 2.3, subs: [[0.2, 1.5, 'E chegue ao <b>destino.</b>']] },
+  { kind: 'end', dur: 7.4, hideSubs: true },
 ];
 let acc = 0; for (const s of SCENES) { s.start = acc; acc += s.dur; }
 window.TOTAL = acc;
@@ -179,15 +179,15 @@ function drawMap(t) {
 // ---------- painel beeno
 function drawBeeno(t) {
   const lg = $('blogo'), tg = $('btag');
-  const up = inout((t - 2.2) / 0.9);                // logo sobe para dar lugar aos cartões
+  const up = inout((t - 1.8) / 0.8);                // logo sobe para dar lugar aos cartões
   const k0 = ramp(t, 0.2, 0.8);
   lg.style.opacity = k0; lg.style.top = (760 - 520 * up) + 'px'; lg.style.transform = `scale(${(0.94 + 0.06 * k0) * (1 - 0.35 * up)})`;
   tg.style.opacity = ramp(t, 0.8, 0.6) * (1 - up); tg.style.top = (980 - 520 * up) + 'px';
   // rota verde descendo pelos cartões
-  const rk = inout((t - 2.8) / 4.2);
+  const rk = inout((t - 2.3) / 2.6);
   const y0 = 600, y1 = 1300;
   $('route').innerHTML = `<line x1="120" y1="${y0}" x2="120" y2="${y0 + (y1 - y0) * rk}" stroke="#00CD8A" stroke-width="4" stroke-dasharray="14 12" stroke-linecap="round"/>`;
-  [['c1', 'd1', 3.0], ['c2', 'd2', 4.4], ['c3', 'd3', 5.8]].forEach(([c, d, a]) => {
+  [['c1', 'd1', 2.5], ['c2', 'd2', 3.3], ['c3', 'd3', 4.1]].forEach(([c, d, a]) => {
     const k = ramp(t, a, 0.6); const el = $(c);
     el.style.opacity = k * (1 - ramp(t, 9.8, 0.6) * 0); el.style.transform = `translateX(${(1 - k) * 60}px)`;
     $(d).style.opacity = ramp(t, a - 0.1, 0.3);
