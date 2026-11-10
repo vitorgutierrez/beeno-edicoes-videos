@@ -49,11 +49,13 @@ db2g = lambda d: 10 ** (d / 20)
 # ---------- automação da trilha
 auto = np.full(N, db2g(o.music_db))
 smooth = lambda x: 0.5 - 0.5 * np.cos(np.pi * np.clip(x, 0, 1))
-fade_out = (t >= o.card - 0.75) & (t < o.card)
-auto[fade_out] *= 1 - smooth((t[fade_out] - (o.card - 0.75)) / 0.75)
-auto[(t >= o.card) & (t < o.tower - 0.35)] = 0
-back = t >= o.tower - 0.35
-auto[back] *= smooth((t[back] - (o.tower - 0.35)) / 2.2)
+# transição da cartela: a trilha não some. Ela abafa (filtro passa-baixa fechando) e recua para
+# ~-10 dB enquanto a frase é dita, como se ficasse distante, e "abre" de novo com a torre.
+k_in = smooth((t - (o.card - 1.4)) / 1.4)                  # 0→1 até a cartela
+k_out = smooth((t - (o.tower - 0.75)) / 2.6)                # 0→1 depois da torre
+depth = k_in * (1 - k_out)                                 # 0 = normal, 1 = recuado
+auto *= db2g(-7) ** depth
+cutoff = np.exp(np.log(16000) + (np.log(650) - np.log(16000)) * depth)
 end_dip = t >= 41.5
 auto[end_dip] *= db2g(-3) ** smooth((t[end_dip] - 41.5) / 1.5)
 
@@ -67,32 +69,21 @@ a_att = np.exp(-1 / (0.040 * SR)); a_rel = np.exp(-1 / (0.450 * SR))
 for i in range(1, N):
     a = a_att if target[i] < g[i - 1] else a_rel
     g[i] = a * g[i - 1] + (1 - a) * target[i]
-music = mus * (auto * g)[:, None]
-
-# ---------- reverse swell (trilha invertida com reverb) terminando no impacto
-s0, s1 = int((o.card - 2.4) * SR), int((o.card - 1.2) * SR)
-seg = mus[s0:s1] * db2g(o.music_db)
-tail = conv(seg, hall(2.2, 0.6))
-rev = tail[::-1][:int(1.6 * SR)]
-rev *= (np.linspace(0, 1, len(rev)) ** 2.2)[:, None]
-rev *= db2g(6)
-fx = np.zeros((N + 4 * SR, 2))
-c0 = int(o.card * SR)
-fx[c0 - len(rev):c0] += rev
-
-# ---------- impacto grave
-L = int(3.2 * SR); tt = np.arange(L) / SR
-f = 36 + 19 * np.exp(-tt / 0.18)
-sub = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-tt / 0.75) * (1 - np.exp(-tt / 0.004))
-sub = np.tanh(sub * 1.6) / np.tanh(1.6)
-click = sosfilt(butter(2, 1800, 'lp', fs=SR, output='sos'), rng.normal(0, 1, L)) * np.exp(-tt / 0.03) * 0.35
-hit = np.stack([sub + click, sub + click], 1)
-hit_wet = conv(hit * 0.5, hall(3.0, 0.75))[:L + 3 * SR]
-hit_all = np.zeros_like(hit_wet); hit_all[:L] += hit; hit_all += hit_wet * 0.3
-hit_all *= db2g(-14)
-fx[c0:c0 + len(hit_all)] += hit_all
-fx = fx[:N]
-
+# passa-baixa variável (1 polo, aplicado só onde a trilha está abafada)
+lo, hi = int((o.card - 1.6) * SR), int((o.tower + 2.3) * SR)
+x = mus[lo:hi].astype(np.float64); y = np.empty_like(x); z = np.zeros(2)
+coef = 1 - np.exp(-2 * np.pi * cutoff[lo:hi] / SR)
+for i in range(len(x)):
+    z += coef[i] * (x[i] - z); y[i] = z
+mus_f = mus.astype(np.float64).copy(); mus_f[lo:hi] = y
+# um pouco de ambiência (reverb) na parte abafada, para soar distante e não "cortado"
+wet = conv(mus_f[lo:hi] * depth[lo:hi, None], hall(4.5, 1.2))
+amb = np.zeros_like(mus_f); amb[lo:lo + len(wet)] = wet[:max(0, min(len(wet), N - lo))]
+# a trilha tem uma pausa composta e volta de forma brusca logo antes da torre: suaviza a reentrada
+reentry = np.where(t < o.tower - 0.7, 1.0, smooth((t - (o.tower - 0.7)) / 1.3))
+reentry[t < o.card + 0.5] = 1.0
+music = mus_f * reentry[:, None] * (auto * g)[:, None] + amb * (db2g(o.music_db) * 0.8 * np.sqrt(g))[:, None]
+fx = 0
 mix = vo + music + fx
 
 # ---------- ganho fixo para o alvo de loudness (medido pelo ffmpeg) + limitador de pico
