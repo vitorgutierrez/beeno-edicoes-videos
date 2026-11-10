@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Reel Por que trocar de CRM</title>
+<!--
+  Reel "Por que trocar de CRM": para quem já tem CRM. Argumento = consolidação.
+  Diferenciais usados (todos declarados em beeno.ai): funil + e-mail marketing nativo + landing pages
+  sem código + VoIP com gravação + cadências num só lugar ("sem ferramenta extra ou integração frágil");
+  "Em vez de migrar tudo, a gente consolida"; onboarding rápido; implementação e suporte no Brasil;
+  sem fidelidade longa; demo 1:1 no contexto da operação. Nenhum concorrente é citado.
+  Dados de exemplo. 1080x1920, 30 fps. Render: node videos/reel-trocar/render.js
+-->
+<style>
+@font-face { font-family: "ID"; font-weight: 300; src: url("../../assets/fonts/InterDisplay-Light.otf"); }
+@font-face { font-family: "ID"; font-weight: 500; src: url("../../assets/fonts/InterDisplay-Medium.otf"); }
+@font-face { font-family: "ID"; font-weight: 600; src: url("../../assets/fonts/InterDisplay-SemiBold.otf"); }
+@font-face { font-family: "ID"; font-weight: 700; src: url("../../assets/fonts/InterDisplay-Bold.otf"); }
+@font-face { font-family: "ID"; font-weight: 800; src: url("../../assets/fonts/InterDisplay-ExtraBold.otf"); }
+@font-face { font-family: "P"; font-weight: 400; src: url("../../assets/fonts/Poppins-Regular.ttf"); }
+@font-face { font-family: "P"; font-weight: 500; src: url("../../assets/fonts/Poppins-Medium.ttf"); }
+@font-face { font-family: "P"; font-weight: 600; src: url("../../assets/fonts/Poppins-SemiBold.ttf"); }
+@font-face { font-family: "P"; font-weight: 700; src: url("../../assets/fonts/Poppins-Bold.ttf"); }
+:root { --g:#00CD8A; --g2:#00A973; --ink:#0A1C15; --bg:#0A1712; --muted:#8FA39A; --red:#FF6568; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); }
+body { font-family: "ID", sans-serif; color: #fff; -webkit-font-smoothing: antialiased; }
+#stage { position: absolute; inset: 0; overflow: hidden; }
+#glow { position: absolute; width: 1600px; height: 1600px; border-radius: 50%; left: -260px; top: -520px;
+  background: radial-gradient(circle, rgba(0,170,110,.30) 0%, rgba(0,120,80,.10) 42%, rgba(0,0,0,0) 70%); }
+#grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(143,163,154,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(143,163,154,.06) 1px, transparent 1px); background-size: 90px 90px; }
+.L { position: absolute; inset: 0; display: none; }
+.on { display: block; }
+.c { position: absolute; left: 0; right: 0; text-align: center; }
+.kick { font-weight: 600; font-size: 26px; letter-spacing: .3em; color: var(--muted); text-transform: uppercase; }
+.big { font-weight: 300; font-size: 92px; line-height: 1.08; letter-spacing: -.03em; }
+.big b { font-weight: 800; color: var(--g); }
+.h1 { font-weight: 300; font-size: 60px; line-height: 1.16; letter-spacing: -.02em; }
+.h1 b { font-weight: 700; color: var(--g); }
+.h1 .r { font-weight: 700; color: var(--red); }
+
+/* pilha de ferramentas */
+.tile { position: absolute; width: 420px; height: 150px; border-radius: 24px; background: #142A21; border: 2px solid rgba(255,255,255,.10);
+  display: flex; align-items: center; gap: 22px; padding: 0 28px; box-shadow: 0 24px 60px rgba(0,0,0,.4); }
+.tile .ic { width: 76px; height: 76px; border-radius: 18px; background: rgba(255,255,255,.08); display: grid; place-items: center; flex: none; }
+.tile b { display: block; font-size: 32px; font-weight: 600; }
+.tile span { font-size: 21px; color: var(--muted); }
+.tile .bill { position: absolute; right: 18px; top: 14px; font-size: 17px; color: var(--muted); font-weight: 600; letter-spacing: .06em; }
+.tile.bad { border-color: rgba(255,101,104,.7); }
+.frag { position: absolute; right: -16px; bottom: -18px; background: #fff; color: #12241C; border-radius: 12px; padding: 8px 12px; font-family: "P"; font-size: 17px; font-weight: 600;
+  box-shadow: 0 10px 24px rgba(0,0,0,.4); display: flex; gap: 8px; align-items: center; }
+.frag i { width: 26px; height: 26px; border-radius: 50%; background: #7C5CFC; color: #fff; display: grid; place-items: center; font-style: normal; font-size: 11px; }
+#wires { position: absolute; inset: 0; }
+.warn { position: absolute; background: var(--red); color: #fff; font-family: "P"; font-weight: 600; font-size: 20px; padding: 8px 16px; border-radius: 999px; box-shadow: 0 10px 30px rgba(255,101,104,.4); white-space: nowrap; }
+.count { font-family: "ID"; font-weight: 700; font-size: 44px; letter-spacing: -.01em; }
+.count span { color: var(--red); }
+
+/* logo do Beeno (ícone) */
+#bicon { position: absolute; left: 50%; top: 50%; width: 260px; height: 260px; margin: -130px 0 0 -130px; border-radius: 60px; background: var(--g);
+  display: grid; place-items: center; box-shadow: 0 0 120px rgba(0,205,138,.55); }
+#flash { position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(0,205,138,.55), rgba(0,205,138,0) 60%); }
+
+/* timeline do contato */
+#win { position: absolute; left: 60px; right: 60px; top: 330px; height: 1080px; border-radius: 26px; overflow: hidden; background: #fff; color: #1F2430; font-family: "P";
+  box-shadow: 0 50px 110px rgba(0,0,0,.55); }
+#win .top { height: 64px; background: #000; color: #fff; display: flex; align-items: center; padding: 0 26px; gap: 16px; font-size: 20px; }
+#win .top .sp { flex: 1; }
+.contact { display: flex; align-items: center; gap: 22px; padding: 30px 36px 26px; border-bottom: 1px solid #E6ECE9; }
+.contact .av { width: 84px; height: 84px; border-radius: 50%; background: #7C5CFC; color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 30px; }
+.contact b { display: block; font-size: 34px; font-weight: 600; }
+.contact span { font-size: 22px; color: #6B7C74; }
+.contact .val { margin-left: auto; font-size: 20px; font-weight: 600; padding: 8px 16px; border-radius: 999px; background: #E6FAF3; color: #00A973; }
+.ev { position: absolute; left: 36px; right: 36px; display: flex; gap: 22px; align-items: flex-start; }
+.ev .dot { width: 64px; height: 64px; border-radius: 16px; display: grid; place-items: center; flex: none; }
+.ev .tx b { display: block; font-size: 26px; font-weight: 600; margin-bottom: 4px; }
+.ev .tx span { font-size: 21px; color: #6B7C74; }
+.ev .mod { margin-left: auto; font-size: 17px; font-weight: 600; padding: 6px 14px; border-radius: 999px; background: #EEF2F0; color: #4A5160; white-space: nowrap; margin-top: 6px; }
+.rail { position: absolute; left: 67px; width: 2px; background: #E6ECE9; }
+.cap { position: absolute; left: 60px; right: 60px; text-align: center; font-size: 46px; line-height: 1.22; font-weight: 300; letter-spacing: -.015em; }
+.cap b { font-weight: 700; color: var(--g); }
+
+/* objeções */
+.ob { position: absolute; left: 90px; right: 90px; display: flex; gap: 26px; align-items: center; padding: 30px 32px; border-radius: 22px; background: rgba(255,255,255,.05); border: 1.5px solid rgba(0,205,138,.25); }
+.ob .ck { width: 64px; height: 64px; border-radius: 50%; background: var(--g); display: grid; place-items: center; flex: none; }
+.ob b { font-size: 38px; font-weight: 600; line-height: 1.2; letter-spacing: -.01em; }
+.ob b em { font-style: normal; color: var(--g); }
+
+/* final */
+#logo { position: absolute; left: 50%; width: 520px; margin-left: -260px; top: 820px; }
+.cta { display: inline-block; border: 2px solid var(--g); border-radius: 18px; padding: 22px 34px; font-size: 32px; font-weight: 600; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+  <symbol id="i-funnel" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3 4h18l-7 8.5V19l-4 2v-8.5z"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></g></symbol>
+  <symbol id="i-page" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M7 13h6M7 16h10"/></g></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></symbol>
+  <symbol id="i-sheet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></g></symbol>
+  <symbol id="i-cad" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></g></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="b" viewBox="79 24 161 206"><path d="M221.24,116.39c-5.89-10.28-13.89-18.23-24-23.87c-10.11-5.63-21.63-8.45-34.56-8.45c-10.94,0-20.81,2.45-29.59,7.34c-4.87,2.71-9.18,6.22-12.93,10.51V45.8l-30.8-11.71h-0.03v184.51h29.59v-16.93c3.86,4.68,8.41,8.46,13.68,11.34c8.95,4.89,18.98,7.34,30.09,7.34c12.93,0,24.45-2.82,34.56-8.45c10.11-5.63,18.11-13.55,24-23.75c5.88-10.19,8.83-22.17,8.83-35.93C230.07,138.61,227.12,126.67,221.24,116.39z M193.26,174.21c-3.48,6.38-8.17,11.28-14.05,14.67c-5.89,3.4-12.64,5.1-20.27,5.1c-7.3,0-13.93-1.7-19.89-5.1c-5.97-3.4-10.69-8.29-14.17-14.67c-3.48-6.38-5.22-13.72-5.22-22.01c0-8.45,1.74-15.79,5.22-22.01c3.48-6.22,8.21-11.02,14.17-14.42c5.97-3.4,12.6-5.1,19.89-5.1c7.62,0,14.38,1.7,20.27,5.1c5.88,3.4,10.57,8.21,14.05,14.42c3.48,6.22,5.22,13.55,5.22,22.01C198.49,160.49,196.74,167.83,193.26,174.21z"/></symbol>
+</defs></svg>
+<div id="stage">
+  <div id="glow"></div><div id="grid"></div>
+
+  <!-- A: gancho -->
+  <div class="L" id="sHook">
+    <div class="c big" id="h1" style="top:700px">Você já tem<br>um CRM.</div>
+    <div class="c big" id="h2" style="top:960px"><b>Então por que<br>trocar?</b></div>
+  </div>
+
+  <!-- B/C/D: a pilha de ferramentas → fragmentação → vira uma só -->
+  <div class="L" id="sStack">
+    <div class="c h1" id="st1" style="top:200px">Porque o CRM <b>nunca vem sozinho.</b></div>
+    <div class="c h1" id="st2" style="top:200px">O mesmo cliente,<br><span class="r">espalhado em 5 lugares.</span></div>
+    <div class="c h1" id="st3" style="top:200px">E alguém juntando tudo<br>numa planilha <span class="r">no fim do mês.</span></div>
+    <div class="c h1" id="st4" style="top:200px">No Beeno,<br><b>é uma coisa só.</b></div>
+    <svg id="wires" width="1080" height="1920"></svg>
+    <div id="tiles"></div>
+    <div class="c count" id="cnt" style="top:1560px"><span>5</span> ferramentas · <span>5</span> logins · <span>5</span> faturas</div>
+    <div class="warn" id="warn" style="left:600px;top:790px">⚠ sincronização falhou</div>
+    <div id="flash"></div>
+    <div id="bicon"><svg width="150" height="190" fill="#fff"><use href="#b"/></svg></div>
+  </div>
+
+  <!-- E: uma timeline só -->
+  <div class="L" id="sTime">
+    <div class="c kick" id="tk" style="top:240px;color:var(--g)">Um contato · um histórico</div>
+    <div id="win">
+      <div class="top"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M15 4c-4 0-6 2-6 4.5S11 12 12 12.5 15 15 15 16.5 13 20 9 20" fill="none" stroke="#00CD8A" stroke-width="2.6" stroke-linecap="round"/></svg><span>Contatos</span><span class="sp"></span><span>Comercial ▾</span></div>
+      <div class="contact"><span class="av">MC</span><div><b>Mariana Costa</b><span>Diretora comercial · Grupo Atlas</span></div><span class="val" id="val">Lead</span></div>
+      <div class="rail" id="rail" style="top:250px;height:0"></div>
+      <div id="evs"></div>
+    </div>
+    <div class="cap" id="tc1" style="top:1500px">Funil, e-mail marketing, landing pages,<br>ligações e cadências. <b>Nativos.</b></div>
+    <div class="cap" id="tc2" style="top:1500px"><b>Sem ferramenta extra.</b><br>Sem integração frágil.</div>
+  </div>
+
+  <!-- F: objeções -->
+  <div class="L" id="sObj">
+    <div class="c h1" id="o0" style="top:360px">“Mas trocar de CRM<br><b>dá trabalho.”</b></div>
+    <div class="ob" id="o1" style="top:700px"><span class="ck"><svg width="34" height="34" color="#0A1C15"><use href="#i-check"/></svg></span><b>Em vez de migrar tudo,<br><em>a gente consolida.</em></b></div>
+    <div class="ob" id="o2" style="top:900px"><span class="ck"><svg width="34" height="34" color="#0A1C15"><use href="#i-check"/></svg></span><b>Onboarding rápido,<br><em>sem meses configurando.</em></b></div>
+    <div class="ob" id="o3" style="top:1100px"><span class="ck"><svg width="34" height="34" color="#0A1C15"><use href="#i-check"/></svg></span><b>Implementação e suporte<br><em>no Brasil.</em></b></div>
+    <div class="ob" id="o4" style="top:1300px"><span class="ck"><svg width="34" height="34" color="#0A1C15"><use href="#i-check"/></svg></span><b>Sem fidelidade longa.</b></div>
+  </div>
+
+  <!-- G: final -->
+  <div class="L" id="sEnd">
+    <div class="c big" id="e0" style="top:420px;font-size:84px">Troque <span style="color:var(--red);font-weight:700">5 ferramentas</span><br><b>por uma.</b></div>
+    <img id="logo" src="../../assets/brand/beeno-logo-dark-bg.svg" alt="beeno">
+    <div class="c" id="e2" style="top:1180px"><span class="cta">Agende uma demo no contexto<br>da sua operação</span><div style="margin-top:22px;font-size:26px;color:var(--muted)">link na bio</div></div>
+  </div>
+</div>
+
+<script>
+const T = { hook: [0, 3.6], stack: [3.6, 16.6], time: [16.6, 26.0], obj: [26.0, 31.6], end: [31.6, 36.0] };
+window.TOTAL = 36.0;
+const $ = id => document.getElementById(id);
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => 1 - Math.pow(1 - clamp(x), 3);
+const inout = x => { x = clamp(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const back = x => { x = clamp(x); const c = 1.6; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const ramp = (t, a, d) => ease((t - a) / d);
+const hide = (t, a, d = 0.25) => 1 - ramp(t, a, d);
+function show(el, k, dy = 30, sc = 1) { el.style.opacity = k; el.style.transform = `translateY(${(1 - k) * dy}px) scale(${sc})`; }
+
+// ---------- ferramentas (genéricas, sem marcas)
+const TOOLS = [
+  ['i-funnel', 'CRM', 'funil de vendas', 90, 430, 'Etapa: Proposta'],
+  ['i-mail', 'E-mail marketing', 'outra ferramenta', 570, 560, 'Abriu 3 e-mails'],
+  ['i-page', 'Landing pages', 'outra ferramenta', 90, 790, 'Formulário: demo'],
+  ['i-phone', 'Discador', 'outra ferramenta', 570, 920, 'Ligação de 6 min'],
+  ['i-sheet', 'Planilha', 'para juntar tudo', 330, 1150, 'Relatório do mês'],
+];
+const tl = $('tiles');
+TOOLS.forEach(([ic, n, s, x, y, f], i) => tl.insertAdjacentHTML('beforeend',
+  `<div class="tile" id="tl${i}" style="left:${x}px;top:${y}px"><span class="ic"><svg width="40" height="40" color="#C9D4CF"><use href="#${ic}"/></svg></span>
+   <div><b>${n}</b><span>${s}</span></div><span class="bill">+1 contrato</span>
+   <span class="frag" id="fr${i}"><i>MC</i>${f}</span></div>`));
+const CEN = TOOLS.map(([, , , x, y]) => [x + 210, y + 75]);
+
+function sceneHook(t) {
+  show($('h1'), ramp(t, 0.05, 0.35), 40);
+  show($('h2'), ramp(t, 1.5, 0.35), 40, 0.92 + 0.08 * back((t - 1.5) / 0.5));
+}
+
+function sceneStack(t) {
+  // 0–6.8 pilha (st1) · 6.8–9.0 fragmentos (st2) · 9.0–11.4 planilha (st3) · 11.4–13.0 merge (st4)
+  show($('st1'), ramp(t, 0.1, 0.35) * hide(t, 6.6), 20);
+  show($('st2'), ramp(t, 6.9, 0.35) * hide(t, 8.9), 20);
+  show($('st3'), ramp(t, 9.1, 0.35) * hide(t, 11.2), 20);
+  show($('st4'), ramp(t, 12.55, 0.35), 20);
+  const merge = inout((t - 11.4) / 1.0);                 // 11.4 → 12.4 os blocos voam para o centro
+  TOOLS.forEach((_, i) => {
+    const el = $('tl' + i), a = 0.8 + i * 0.9;
+    const k = ramp(t, a, 0.35);
+    const [cx, cy] = CEN[i], dx = (540 - cx) * merge, dy = (960 - cy) * merge;
+    el.style.opacity = k * (1 - ramp(t, 12.2, 0.25));
+    el.style.transform = `translate(${dx}px, ${dy + (1 - back((t - a) / 0.45)) * 80}px) scale(${1 - 0.6 * merge}) rotate(${(i % 2 ? 1 : -1) * 4 * merge}deg)`;
+    el.classList.toggle('bad', t > 5.7 && t < 11.4 && (i === 1 || i === 3));
+    const fk = ramp(t, 7.0 + i * 0.25, 0.3) * (1 - ramp(t, 11.2, 0.2));
+    const fr = $('fr' + i); fr.style.opacity = fk; fr.style.transform = `scale(${0.7 + 0.3 * back((t - 7.0 - i * 0.25) / 0.4)})`;
+  });
+  // linhas de integração (tracejadas) entre as ferramentas; algumas falham
+  const lines = [[0, 1], [0, 2], [1, 3], [2, 4], [3, 4], [0, 3]];
+  let h = '';
+  lines.forEach(([a, b], j) => {
+    const k = ramp(t, 4.6 + j * 0.15, 0.3) * (1 - ramp(t, 11.2, 0.2)); if (k <= 0) return;
+    const bad = t > 5.7 && (j === 2 || j === 5);
+    const flick = bad ? (Math.sin(t * 40 + j) > 0 ? 1 : 0.25) : 1;
+    h += `<line x1="${CEN[a][0]}" y1="${CEN[a][1]}" x2="${CEN[b][0]}" y2="${CEN[b][1]}" stroke="${bad ? '#FF6568' : 'rgba(143,163,154,.45)'}" stroke-width="3" stroke-dasharray="10 10" opacity="${k * flick}"/>`;
+  });
+  $('wires').innerHTML = h;
+  const w = $('warn'); const wk = ramp(t, 5.8, 0.3) * (1 - ramp(t, 11.2, 0.2)); w.style.opacity = wk; w.style.transform = `scale(${0.8 + 0.2 * back((t - 5.8) / 0.4)})`;
+  show($('cnt'), ramp(t, 5.3, 0.35) * (1 - ramp(t, 11.2, 0.2)), 20);
+  // ícone do Beeno nasce no centro
+  const bk = ramp(t, 12.3, 0.35); const bi = $('bicon');
+  bi.style.opacity = bk; bi.style.transform = `scale(${0.4 + 0.6 * back((t - 12.3) / 0.5)})`;
+  $('flash').style.opacity = Math.max(0, 1 - Math.abs(t - 12.45) / 0.35) * 0.9;
+}
+
+const EVS = [
+  ['i-page', '#E8F0FE', '#2563EB', 'Formulário “Quero uma demonstração”', 'Landing page · 09:14', 'Landing pages'],
+  ['i-mail', '#FEF3DC', '#B7791F', 'Abriu “Como funciona” 3 vezes', 'E-mail marketing · clicou em planos', 'E-mail marketing'],
+  ['i-cad', '#F1EAFE', '#7C3AED', 'Cadência: passo 2 de 4', 'E-mail + ligação no tempo certo', 'Cadências'],
+  ['i-phone', '#E6FAF3', '#00A973', 'Ligação de 6 min · gravada', 'Ana Lima · histórico no contato', 'Ligações'],
+  ['i-funnel', '#E6FAF3', '#00A973', 'Negócio movido para Proposta', 'R$ 48.000 · previsão em tempo real', 'Funil'],
+];
+const evs = $('evs');
+EVS.forEach(([ic, bg, fg, b, s, m], i) => evs.insertAdjacentHTML('beforeend',
+  `<div class="ev" id="ev${i}" style="top:${250 + i * 150}px"><span class="dot" style="background:${bg};color:${fg}"><svg width="32" height="32"><use href="#${ic}"/></svg></span>
+   <div class="tx"><b>${b}</b><span>${s}</span></div><span class="mod">${m}</span></div>`));
+function sceneTime(t) {
+  const w = $('win'); const wk = ramp(t, 0, 0.45);
+  w.style.opacity = wk; w.style.transform = `translateY(${(1 - wk) * 90}px) scale(${0.94 + 0.06 * wk})`;
+  show($('tk'), ramp(t, 0.15, 0.35));
+  EVS.forEach((_, i) => { const a = 0.7 + i * 1.15; const el = $('ev' + i); const k = ramp(t, a, 0.35);
+    el.style.opacity = k; el.style.transform = `translateX(${(1 - back((t - a) / 0.45)) * 70}px)`;
+    el.querySelector('.mod').style.background = t > a + 0.3 ? '#E6FAF3' : '#EEF2F0';
+    el.querySelector('.mod').style.color = t > a + 0.3 ? '#00A973' : '#4A5160'; });
+  $('rail').style.height = Math.max(0, 600 * clamp((t - 0.7) / 5.0)) + 'px';
+  $('val').textContent = t > 5.6 ? 'Proposta · R$ 48.000' : 'Lead';
+  show($('tc1'), ramp(t, 0.8, 0.35) * hide(t, 6.2), 20);
+  show($('tc2'), ramp(t, 6.4, 0.35), 20);
+}
+
+function sceneObj(t) {
+  show($('o0'), ramp(t, 0.05, 0.35), 20);
+  ['o1', 'o2', 'o3', 'o4'].forEach((id, i) => { const a = 0.9 + i * 0.95; const k = ramp(t, a, 0.35);
+    const el = $(id); el.style.opacity = k; el.style.transform = `translateX(${(1 - back((t - a) / 0.45)) * -80}px)`; });
+}
+
+function sceneEnd(t) {
+  show($('e0'), ramp(t, 0.05, 0.4), 30);
+  const k = ramp(t, 0.8, 0.5); $('logo').style.opacity = k; $('logo').style.transform = `scale(${0.92 + 0.08 * k})`;
+  show($('e2'), ramp(t, 1.4, 0.45));
+}
+
+window.seek = async function (tt) {
+  for (const id of ['sHook', 'sStack', 'sTime', 'sObj', 'sEnd']) $(id).classList.remove('on');
+  const pick = (k, id, fn) => { const [a, b] = T[k]; if (tt >= a && tt < b) { $(id).classList.add('on'); fn(tt - a); return true; } };
+  pick('hook', 'sHook', sceneHook) || pick('stack', 'sStack', sceneStack) || pick('time', 'sTime', sceneTime) ||
+    pick('obj', 'sObj', sceneObj) || (($('sEnd').classList.add('on')), sceneEnd(tt - T.end[0]));
+  $('glow').style.transform = `translate(${30 * Math.sin(tt / 3)}px, ${20 * Math.cos(tt / 4)}px)`;
+};
+</script>
+</body>
+</html>
