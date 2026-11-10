@@ -90,6 +90,28 @@ body { font-family: "ID", sans-serif; color: #fff; -webkit-font-smoothing: antia
 .cmp .lb { font-size: 30px; color: var(--muted); letter-spacing: .2em; font-weight: 600; margin-bottom: 8px; }
 .cmp .v { font-weight: 800; font-size: 210px; letter-spacing: -.04em; line-height: 1; }
 .strike { position: absolute; left: -10px; height: 12px; background: var(--red); top: 50%; transform-origin: left; border-radius: 6px; }
+/* rewind */
+.rw { position: absolute; left: 0; right: 0; top: 0; bottom: 0; }
+.scan { position: absolute; left: 0; right: 0; height: 3px; background: rgba(255,255,255,.08); }
+/* desfecho */
+.call { position: absolute; left: 120px; right: 120px; background: #fff; color: #12241C; border-radius: 26px; padding: 30px 32px; font-family: "P";
+  display: flex; gap: 22px; align-items: center; box-shadow: 0 30px 70px rgba(0,0,0,.45); }
+.call .ph { width: 84px; height: 84px; border-radius: 50%; background: var(--g); display: grid; place-items: center; flex: none; position: relative; }
+.call .ph i { position: absolute; inset: 0; border-radius: 50%; border: 3px solid var(--g); }
+.call b { display: block; font-size: 32px; font-weight: 600; }
+.call span { font-size: 23px; color: #6B7C74; }
+.call .st { margin-left: auto; font-size: 20px; font-weight: 600; padding: 8px 16px; border-radius: 999px; background: #E6FAF3; color: #00A973; white-space: nowrap; }
+.kb { position: absolute; left: 70px; right: 70px; background: #F4F5F6; border-radius: 22px; padding: 24px; font-family: "P"; color: #1F2430;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 20px; box-shadow: 0 30px 70px rgba(0,0,0,.45); }
+.kb .col { background: #EEF0F1; border-radius: 12px; min-height: 300px; padding: 0 0 16px; position: relative; }
+.kb .ch { font-size: 22px; font-weight: 600; padding: 16px 18px; border-bottom: 3px solid #58C08B; display: flex; justify-content: space-between; }
+.kb .ch span { color: #6B7C74; }
+.dcard { position: absolute; left: 40px; width: 400px; background: #fff; border: 2px solid #E6E8EB; border-radius: 10px; padding: 18px 20px; font-family: "P"; color: #1F2430; }
+.dcard .t { color: #2F5DA8; font-weight: 600; font-size: 24px; margin-bottom: 6px; }
+.dcard .s { font-size: 19px; color: #4A5160; }
+.dcard .chip { display: inline-block; margin-top: 12px; font-size: 18px; font-weight: 600; padding: 6px 14px; border-radius: 999px; background: #E6FAF3; color: #00A973; }
+.cap { position: absolute; left: 70px; right: 70px; text-align: center; font-size: 50px; line-height: 1.2; font-weight: 300; letter-spacing: -.015em; }
+.cap b { font-weight: 700; color: var(--g); }
 /* final */
 #logo { position: absolute; left: 50%; width: 560px; margin-left: -280px; top: 640px; }
 .cta { display: inline-block; border: 2px solid var(--g); border-radius: 18px; padding: 22px 38px; font-size: 34px; font-weight: 600; }
@@ -116,7 +138,7 @@ body { font-family: "ID", sans-serif; color: #fff; -webkit-font-smoothing: antia
 
   <!-- 5: automação -->
   <div class="L" id="sAuto">
-    <div class="c kick" id="ak" style="top:200px">No Beeno, isso é automático</div>
+    <div class="c kick" id="ak" style="top:200px">Roleta comercial · automação do Beeno</div>
     <div id="win">
       <div class="top"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M15 4c-4 0-6 2-6 4.5S11 12 12 12.5 15 15 15 16.5 13 20 9 20" fill="none" stroke="#00CD8A" stroke-width="2.6" stroke-linecap="round"/></svg>
         <span>Automações</span><span class="sp"></span><span class="clk" id="wclk">09:02</span></div>
@@ -143,10 +165,34 @@ body { font-family: "ID", sans-serif; color: #fff; -webkit-font-smoothing: antia
       <div><b>Nova tarefa · Realizar primeiro contato</b><span>Grupo Atlas · Mariana Costa</span></div><small>agora</small></div>
   </div>
 
+  <!-- rewind: a mesma segunda, com o Beeno -->
+  <div class="L" id="sRew">
+    <div class="c kick" id="rk" style="top:470px">Segunda-feira</div>
+    <div class="c clock" id="rclk" style="top:540px"></div>
+    <div class="c h1" id="r1" style="top:930px">Agora, a mesma segunda-feira.</div>
+    <div class="c h1" id="r2" style="top:1010px"><b>Com o Beeno.</b></div>
+    <div class="lead" id="lead2" style="top:1180px"><span class="av">MC</span><div><b>Mariana Costa</b><span>Grupo Atlas · preencheu o formulário</span></div><span class="tag">Novo lead</span></div>
+    <div id="scans"></div>
+  </div>
+
+  <!-- desfecho: 09:05, a ligação e o negócio avançando -->
+  <div class="L" id="sRes">
+    <div class="c kick" id="xk" style="top:360px;color:var(--g)">Segunda-feira · <span id="xclk">09:05</span></div>
+    <div class="call" id="call" style="top:470px"><span class="ph"><i id="ring"></i><svg width="40" height="40" viewBox="0 0 24 24"><path fill="#0A1C15" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg></span>
+      <div><b id="callt">Ana ligando para Mariana…</b><span>Grupo Atlas · primeiro contato</span></div><span class="st" id="callst">chamando</span></div>
+    <div class="kb" id="kb" style="top:780px">
+      <div class="col"><div class="ch">Lead <span>12</span></div></div>
+      <div class="col"><div class="ch">Qualificação <span id="qn">7</span></div></div>
+    </div>
+    <div class="dcard" id="dc" style="top:865px"><div class="t">Grupo Atlas · Expansão 2027</div><div class="s">Mariana Costa · R$ 48.000</div><div class="s" style="margin-top:4px">Proprietário: <b>Ana Lima</b></div><span class="chip" id="dchip">Reunião · qua, 10h</span></div>
+    <div class="cap" id="x1" style="top:1290px">09:05. <b>A Ana liga para a Mariana.</b></div>
+    <div class="cap" id="x2" style="top:1290px">Interesse quente,<br><b>negócio andando no funil.</b></div>
+  </div>
+
   <!-- 6: comparação -->
   <div class="L" id="sCmp">
-    <div class="cmp" id="cA" style="top:520px"><div class="lb">PRIMEIRO CONTATO · ANTES</div><div class="v" style="color:#5E6F68;position:relative;display:inline-block">5h35<div class="strike" id="stk" style="width:calc(100% + 20px)"></div></div></div>
-    <div class="cmp" id="cB" style="top:960px"><div class="lb" style="color:var(--g)">COM A ROLETA DO BEENO</div><div class="v" style="color:var(--g)">1 min</div></div>
+    <div class="cmp" id="cA" style="top:520px"><div class="lb">PRIMEIRO CONTATO · SEM PROCESSO</div><div class="v" style="color:#5E6F68;position:relative;display:inline-block">5h35<div class="strike" id="stk" style="width:calc(100% + 20px)"></div></div></div>
+    <div class="cmp" id="cB" style="top:960px"><div class="lb" style="color:var(--g)">COM O BEENO</div><div class="v" style="color:var(--g)">3 min</div></div>
   </div>
 
   <!-- 7: final -->
@@ -158,8 +204,8 @@ body { font-family: "ID", sans-serif; color: #fff; -webkit-font-smoothing: antia
 </div>
 
 <script>
-const T = { clock: [0, 9.0], prob: [9.0, 11.6], auto: [11.6, 22.0], cmp: [22.0, 25.0], end: [25.0, 28.0] };
-window.TOTAL = 28.0;
+const T = { clock: [0, 8.6], prob: [8.6, 11.5], rew: [11.5, 14.0], auto: [14.0, 24.4], res: [24.4, 29.9], cmp: [29.9, 32.9], end: [32.9, 36.4] };
+window.TOTAL = 36.4;
 const $ = id => document.getElementById(id);
 const clamp = x => Math.max(0, Math.min(1, x));
 const ease = x => 1 - Math.pow(1 - clamp(x), 3);
@@ -172,6 +218,7 @@ const pad = n => String(n).padStart(2, '0');
 
 // roleta: lista de vendedores
 const SELL = [['AL', 'Ana Lima', '#F97316'], ['RS', 'Rafael Souza', '#0EA5E9'], ['MC', 'Marcos Cruz', '#7C5CFC'], ['PA', 'Paula Alves', '#E11D48']];
+for (let i = 0; i < 9; i++) $('scans').insertAdjacentHTML('beforeend', `<div class="scan" data-i="${i}"></div>`);
 const strip = $('strip'); const ROWS = 26;
 for (let i = 0; i < ROWS; i++) { const s = SELL[i % 4]; strip.insertAdjacentHTML('beforeend', `<div class="it"><i style="background:${s[2]}">${s[0]}</i>${s[1]}</div>`); }
 
@@ -250,6 +297,45 @@ function sceneAuto(t) {
   if (t > 7.0) { const z = ramp(t, 7.0, 3.0); w.style.transform = `translateY(${40 * z}px) scale(${1 - 0.04 * z})`; }
 }
 
+function sceneRew(t) {
+  // relógio volta de 14:37 para 09:02 (vermelho → branco → verde), com linhas de "fita voltando"
+  const k = inout((t - 0.05) / 1.25);
+  const m1 = 14 * 60 + 37, m0 = 9 * 60 + 2, m = Math.round(m1 - (m1 - m0) * k);
+  const c = $('rclk'); c.innerHTML = `${pad(Math.floor(m / 60))}<span class="sep">:</span>${pad(m % 60)}`;
+  c.style.color = k < 0.15 ? 'var(--red)' : k < 1 ? '#fff' : 'var(--g)';
+  c.style.transform = `scale(${1 + 0.05 * Math.sin(k * Math.PI)}) skewX(${-6 * Math.sin(k * Math.PI)}deg)`;
+  c.style.filter = k > 0 && k < 1 ? `blur(${1.5 * Math.sin(k * Math.PI)}px)` : 'none';
+  $('rk').style.opacity = 1;
+  document.querySelectorAll('#scans .scan').forEach(el => {
+    const i = +el.dataset.i; const y = ((t * 1900 + i * 230) % 2100) - 100;
+    el.style.top = y + 'px'; el.style.opacity = k > 0 && k < 1 ? 1 : 0;
+  });
+  show($('r1'), ramp(t, 1.3, 0.35)); show($('r2'), ramp(t, 1.65, 0.35), 20, 0.9 + 0.1 * back((t - 1.65) / 0.45));
+  const lk = ramp(t, 1.9, 0.4); $('lead2').style.opacity = lk; $('lead2').style.transform = `translateY(${(1 - back((t - 1.9) / 0.5)) * 120}px)`;
+}
+
+function sceneRes(t) {
+  show($('xk'), ramp(t, 0.05, 0.3));
+  // ligação: chamando (0–1.3) → em ligação com contador
+  show($('call'), ramp(t, 0.1, 0.4), 60);
+  const ring = $('ring'); const rp = (t * 1.6) % 1; ring.style.transform = `scale(${1 + 0.6 * rp})`; ring.style.opacity = t < 1.4 ? 1 - rp : 0;
+  if (t < 1.4) { $('callt').textContent = 'Ana ligando para Mariana…'; $('callst').textContent = 'chamando'; }
+  else { const s = Math.floor((t - 1.4) * 22); $('callt').textContent = 'Em ligação com Mariana'; $('callst').textContent = `● ${pad(Math.floor(s / 60))}:${pad(s % 60)}`; }
+  $('xclk').textContent = '09:05';
+  // funil: card sai de Lead e vai para Qualificação
+  show($('kb'), ramp(t, 0.6, 0.4), 40);
+  const mv = inout((t - 2.5) / 0.9);
+  const dc = $('dc'); dc.style.opacity = ramp(t, 0.8, 0.35);
+  dc.style.left = (112 + mv * 456) + 'px';
+  dc.style.transform = `rotate(${Math.sin(mv * Math.PI) * -3}deg) scale(${1 + 0.04 * Math.sin(mv * Math.PI)})`;
+  dc.style.boxShadow = `0 ${10 + 30 * Math.sin(mv * Math.PI)}px ${30 + 40 * Math.sin(mv * Math.PI)}px rgba(0,60,40,${0.15 + 0.25 * Math.sin(mv * Math.PI)})`;
+  dc.style.borderColor = mv >= 1 ? '#00CD8A' : '#E6E8EB';
+  $('qn').textContent = mv >= 1 ? '8' : '7';
+  const ck = ramp(t, 3.5, 0.35); $('dchip').style.opacity = ck; $('dchip').style.transform = `scale(${0.8 + 0.2 * back((t - 3.5) / 0.4)})`;
+  show($('x1'), ramp(t, 0.3, 0.35) * hide(t, 2.4, 0.25), 20);
+  show($('x2'), ramp(t, 2.7, 0.35), 20);
+}
+
 function sceneCmp(t) {
   show($('cA'), ramp(t, 0.05, 0.35));
   $('stk').style.transform = `scaleX(${inout((t - 0.6) / 0.4)})`;
@@ -262,10 +348,10 @@ function sceneEnd(t) {
 }
 
 window.seek = async function (tt) {
-  for (const id of ['sClock', 'sProb', 'sAuto', 'sCmp', 'sEnd']) $(id).classList.remove('on');
+  for (const id of ['sClock', 'sProb', 'sRew', 'sAuto', 'sRes', 'sCmp', 'sEnd']) $(id).classList.remove('on');
   const pick = (k, id, fn) => { const [a, b] = T[k]; if (tt >= a && tt < b) { $(id).classList.add('on'); fn(tt - a); return true; } };
-  pick('clock', 'sClock', sceneClock) || pick('prob', 'sProb', sceneProb) || pick('auto', 'sAuto', sceneAuto) ||
-    pick('cmp', 'sCmp', sceneCmp) || (($('sEnd').classList.add('on')), sceneEnd(tt - T.end[0]));
+  pick('clock', 'sClock', sceneClock) || pick('prob', 'sProb', sceneProb) || pick('rew', 'sRew', sceneRew) || pick('auto', 'sAuto', sceneAuto) ||
+    pick('res', 'sRes', sceneRes) || pick('cmp', 'sCmp', sceneCmp) || (($('sEnd').classList.add('on')), sceneEnd(tt - T.end[0]));
   $('glow').style.transform = `translate(${30 * Math.sin(tt / 3)}px, ${20 * Math.cos(tt / 4)}px)`;
 };
 </script>

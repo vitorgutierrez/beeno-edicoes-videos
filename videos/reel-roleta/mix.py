@@ -5,22 +5,36 @@ import subprocess, sys, wave
 import numpy as np
 from scipy.signal import butter, sosfilt
 
-SR = 48000; DUR = 28.0; N = int(DUR * SR)
+SR = 48000; DUR = 36.4; N = int(DUR * SR)
 src, out = sys.argv[1], sys.argv[2]
 raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', src, '-ac', '2', '-ar', str(SR), '-f', 'f32le', '-'], capture_output=True, check=True).stdout
 m = np.frombuffer(raw, np.float32).reshape(-1, 2).astype(np.float64)
 
-# ---- estende 1 compasso (2 s a 120 BPM, fase medida 0.02 s): repete 18.02–20.02 em 20.02
-def splice(x, a, b, at, xf=0.03):
-    a, b, at, f = int(a * SR), int(b * SR), int(at * SR), int(xf * SR)
-    seg = x[a:b].copy(); w = np.linspace(0, 1, f)[:, None]
-    head, tail = x[:at].copy(), x[at:].copy()
-    seg[:f] = head[-f:] * (1 - w) + seg[:f] * w
-    tail[:f] = seg[-f:] * (1 - w) + tail[:f] * w
-    return np.concatenate([head[:-f], seg[:-f], tail])
-m = splice(m, 18.02, 20.02, 20.02)
-music = np.zeros((N, 2)); L = min(N, len(m)); music[:L] = m[:L]
-fo = int(26.6 * SR); music[fo:] *= np.linspace(1, 0, N - fo)[:, None] ** 2
+# ---- montagem da trilha no tempo (120 BPM, compasso = 2 s, fase 0.02 s)
+from scipy.signal import resample_poly, fftconvolve
+seg = lambda a, b: m[int(a * SR):int(b * SR)].copy()
+def xjoin(parts, xf=0.03):
+    f = int(xf * SR); out = parts[0]
+    for p in parts[1:]:
+        w = np.linspace(0, 1, f)[:, None]
+        out = np.concatenate([out[:-f], out[-f:] * (1 - w) + p[:f] * w, p[f:]])
+    return out
+intro = seg(0, 11.5); intro[-int(0.08 * SR):] *= np.linspace(1, 0.2, int(0.08 * SR))[:, None]
+# "fita voltando": trecho da intro invertido e acelerado 6x (11.5 → 12.9)
+rw = resample_poly(seg(3.02, 11.52)[::-1], 1, 6, axis=0)
+rw *= np.linspace(1, 0.6, len(rw))[:, None]
+# reverse swell até o primeiro tempo do groove (12.9 → 14.02)
+hit = seg(16.02, 16.7); L = int(2.0 * SR); tt = np.arange(L) / SR
+ir = np.random.default_rng(5).normal(0, 1, (L, 2)) * np.exp(-tt / 0.5)[:, None]; ir /= np.sqrt((ir ** 2).sum(0))
+tail = np.stack([fftconvolve(hit[:, c], ir[:, c]) for c in range(2)], 1)[::-1]
+sw_len = int((14.02 - 12.9) * SR); swell = tail[-sw_len:] * (np.linspace(0, 1, sw_len) ** 2)[:, None]
+swell *= 0.9 / (np.abs(swell).max() + 1e-9) * np.abs(seg(16.02, 18.02)).max()
+groove = [seg(16.02, 24.02), seg(16.02, 24.02), seg(20.02, 22.02)]
+m2 = np.concatenate([intro, rw, swell])
+m2 = np.concatenate([m2[:int(14.02 * SR)], np.zeros((max(0, int(14.02 * SR) - len(m2)), 2))])
+m2 = xjoin([m2] + groove + [seg(24.02, 28.03)])
+music = np.zeros((N, 2)); L = min(N, len(m2)); music[:L] = m2[:L]
+fo = int(35.2 * SR); music[fo:] *= np.linspace(1, 0, N - fo)[:, None] ** 2
 
 # ---- síntese de efeitos
 rng = np.random.default_rng(3)
@@ -63,24 +77,33 @@ for i in range(int(3.0 * SR), int(5.45 * SR), int(0.004 * SR)):
     prev = mm
 add(blip(520, 300, 0.18), 5.42, 0.45)                       # vira vermelho (tom descendo)
 # 9 s: problema / 11.6 s: automação
-add(whoosh(0.55), 11.1, 0.5)
-for t in (12.0, 13.6):  add(blip(880, 1320), t, 0.35)       # nós acendem
+add(whoosh(0.55), 13.5, 0.4)
+for t in (14.4, 16.0):  add(blip(880, 1320), t, 0.35)       # nós acendem
 # roleta: clique a cada nome que passa (desacelerando)
 prev = None
-for i in range(int(13.7 * SR), int(15.75 * SR), int(0.002 * SR)):
-    t = i / SR; k = np.clip((t - 13.7) / 2.0, 0, 1); r = 1 - (1 - k) ** 4; row = int(20 * r)
+for i in range(int(16.1 * SR), int(18.15 * SR), int(0.002 * SR)):
+    t = i / SR; k = np.clip((t - 16.1) / 2.0, 0, 1); r = 1 - (1 - k) ** 4; row = int(20 * r)
     if prev is not None and row != prev: add(click(3600, 0.01), t, 0.45)
     prev = row
-add(blip(988, 1480, 0.16), 15.72, 0.45)                     # parou em Ana Lima
+add(blip(988, 1480, 0.16), 18.12, 0.45)                     # parou em Ana Lima
 # contagem 60 → 0 (16.3–18.0): tique a cada 5 s da contagem
 for s in range(55, -1, -5):
-    t = 16.3 + 1.7 * (1 - s / 60); add(click(2000, 0.012), t, 0.3)
-add(blip(880, 1320), 18.2, 0.35)                            # tarefa criada
-add(ding(), 18.6, 0.55)                                     # notificação
+    t = 18.7 + 1.7 * (1 - s / 60); add(click(2000, 0.012), t, 0.3)
+add(blip(880, 1320), 20.6, 0.35)                            # tarefa criada
+add(ding(), 21.0, 0.55)                                     # notificação
+# desfecho: telefone chamando, atende, card muda de etapa, reunião marcada
+def tone(f1, f2, d):
+    n = int(d * SR); tt = np.arange(n) / SR; e = np.minimum(1, tt / 0.01) * np.minimum(1, (d - tt) / 0.02)
+    return (np.sin(2 * np.pi * f1 * tt) + np.sin(2 * np.pi * f2 * tt)) * 0.5 * e
+for t0 in (24.55, 25.15): add(tone(440, 480, 0.4), t0, 0.18)
+add(blip(660, 990, 0.12), 25.8, 0.35)
+add(whoosh(0.5), 26.8, 0.4)
+add(click(2600, 0.02), 27.8, 0.5)
+add(blip(988, 1480, 0.18), 27.92, 0.45)
 # 22 s: comparação
-add(whoosh(0.35, False), 22.45, 0.35)                       # risco no "5h35"
-add(blip(740, 1480, 0.2), 23.0, 0.45)                       # "1 min"
-add(whoosh(0.6), 24.5, 0.35)                                # entra o logo
+add(whoosh(0.35, False), 30.35, 0.35)                       # risco no "5h35"
+add(blip(740, 1480, 0.2), 30.9, 0.45)                       # "3 min"
+add(whoosh(0.6), 32.4, 0.35)                                # entra o logo
 fx = np.stack([fx, fx], 1)
 
 mix = music * 10 ** (-5 / 20) + fx * 0.5
