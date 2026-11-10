@@ -1,14 +1,18 @@
-# Plano de voo 2027 — roteiro de locução (Vitor)
+# Plano de voo 2027 — roteiro de locução (Vitor) · versão 2
 
-**Duração:** ~65 segundos · **Tom:** sério, calmo, reflexivo, com pausa entre os blocos. Sem pressa e
+**Duração:** ~60 segundos · **Tom:** sério, calmo, reflexivo, com pausa entre os blocos. Sem pressa e
 sem tom de vendedor. É uma conversa de líder para líder, no fim do ano.
 
-## Como gravar
-- Celular serve. Ambiente silencioso (um quarto com cortinas/roupas abafa o eco), celular a ~20 cm da boca,
-  apoiado, de lado (não sopra o microfone).
-- Grave **cada bloco separado**, 2 ou 3 vezes. Pode errar e repetir na mesma gravação, eu escolho a melhor.
-- Deixe ~2 segundos de silêncio antes e depois de cada bloco.
-- Mande os arquivos como vierem (m4a, mp3 ou wav).
+## Como gravar (importante)
+- **Não grave pelo WhatsApp** (mensagem de voz). O WhatsApp corta automaticamente finais de palavra e
+  pausas, e isso não tem conserto depois.
+- Use o app de gravador do celular (Gravador de Voz no Android, Gravações no iPhone).
+- Ambiente silencioso, de preferência um cômodo pequeno com cortina ou roupas (abafa o eco).
+  Celular a ~20 cm da boca, apoiado, de lado (não sopra o microfone). Não mexa no celular durante a gravação.
+- Antes de começar a falar, fique 2 segundos em silêncio. Entre os blocos, faça uma pausa de 2 segundos.
+- Pode errar e repetir a frase na mesma gravação. Eu escolho a melhor.
+- Mande o arquivo como **documento/anexo** (ou pelo Drive), não como mensagem de voz.
+- Atenção à pronúncia de **"feeling"** e de **"da sua operação"** (falar devagar, separando bem).
 
 ## Texto
 
@@ -24,7 +28,7 @@ sem tom de vendedor. É uma conversa de líder para líder, no fim do ano.
 
 **Bloco 3 — a frase central** *(pausa antes, mais baixo)*
 > Ninguém voa às cegas por escolha.
-> Voa porque falta visão.
+> Voa assim por falta de visão.
 
 **Bloco 4 — a torre**
 > Todo voo seguro tem uma coisa em comum:
