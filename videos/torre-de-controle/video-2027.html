@@ -121,23 +121,23 @@ body { font-family: "ID", sans-serif; color: #fff; -webkit-font-smoothing: antia
 const FPS = 30;
 // Linha do tempo. Legendas: [início, fim, texto] em segundos relativos ao plano.
 const SCENES = [
-  // tempos casados com a locução do Vitor (audio/vo-vitor.wav começa em 0s do filme)
-  { src: 'n20', off: 0.3, dur: 4.5, subs: [[1.3, 4.3, 'Todo fim de ano, toda empresa faz a mesma coisa.']] },
-  { kind: 'map', dur: 4.5, subs: [[0.1, 4.3, 'Olha para trás… e traça o <b>plano de voo</b> do ano seguinte.']] },
-  { src: 's01', off: 0.4, dur: 4.6, subs: [[0.1, 4.5, 'E, olhando para 2026, muita empresa voou <b>sem enxergar a rota.</b>']] },
-  { src: 's02', off: 0.4, dur: 2.0, subs: [[0.1, 1.95, 'Meta definida no feeling.']] },
-  { src: 's05', off: 0.3, dur: 4.3, subs: [[0.1, 4.2, 'Informação espalhada em planilhas, mensagens… e na cabeça de cada um.']] },
-  { src: 's04', off: 0.3, dur: 1.6, subs: [[0.3, 1.6, 'Decisões tomadas com o <b>dado de ontem.</b>']] },
-  { src: 's03', off: 0.6, dur: 1.4, subs: [[0.0, 1.3, 'Decisões tomadas com o <b>dado de ontem.</b>']] },
-  { src: 's06', off: 0.4, dur: 2.4, subs: [[0.2, 2.35, 'Ninguém voa às cegas por escolha.']] },
-  { kind: 'card', dur: 2.0, big: 'Voa assim por<br><b>falta de visão.</b>' },
-  { src: 'n22', off: 0.4, dur: 5.8, subs: [[0.65, 2.9, 'Todo voo seguro tem uma coisa em comum:'], [3.1, 5.7, 'alguém que enxerga o todo. <b>Uma torre de controle.</b>']] },
-  { kind: 'beeno', dur: 10.0, subs: [[0.2, 2.2, 'Em vendas, essa torre é o <b>Beeno.</b>'], [2.4, 7.1, 'Cada contato, cada negócio, cada próximo passo… na mesma tela, em tempo real.'], [7.4, 9.9, 'Vendas e marketing olhando para <b>a mesma rota.</b>']] },
-  { src: 'n24', off: 0.3, dur: 3.1, subs: [[0.4, 3.05, '2027 não precisa ser um ano de mais esforço.']] },
-  { src: 'n25', off: 0.4, dur: 1.9, subs: [[0.15, 1.85, 'Precisa ser um ano de <b>mais visão.</b>']] },
-  { src: 's10', off: 1.2, dur: 2.3, subs: [[0.3, 2.25, 'Planeje a rota. Acompanhe cada etapa.']] },
-  { src: 'n23', off: 0.3, dur: 2.3, subs: [[0.2, 1.5, 'E chegue ao <b>destino.</b>']] },
-  { kind: 'end', dur: 7.4, hideSubs: true },
+  // gerado a partir da locução v2 do Vitor (audio/vo-vitor.wav começa em 0s do filme)
+  { src: 'n20', off: 0.3, dur: 4.07, subs: [[1.0, 4.0, 'Todo fim de ano, toda empresa faz a mesma coisa.']] },
+  { kind: 'map', dur: 4.28, subs: [[0.25, 4.26, 'Olha para trás… e traça o <b>plano de voo</b> do ano seguinte.']] },
+  { src: 's01', off: 0.4, dur: 4.43, subs: [[0.25, 4.41, 'E, olhando para 2026, muita empresa voou <b>sem enxergar a rota.</b>']] },
+  { src: 's02', off: 0.4, dur: 1.55, subs: [[0.25, 1.53, 'Meta definida no feeling.']] },
+  { src: 's05', off: 0.3, dur: 4.8, subs: [[0.25, 4.78, 'Informação espalhada em planilhas, mensagens… e na cabeça de cada um.']] },
+  { src: 's04', off: 0.3, dur: 2.04, subs: [[0.25, 2.02, 'Decisões tomadas com o <b>dado de ontem.</b>']] },
+  { src: 's03', off: 0.6, dur: 1.44, subs: [[0.0, 1.42, 'Decisões tomadas com o <b>dado de ontem.</b>']] },
+  { src: 's06', off: 0.4, dur: 2.37, subs: [[0.25, 2.35, 'Ninguém voa às cegas por escolha.']] },
+  { kind: 'card', dur: 2.53, big: 'Voa assim por<br><b>falta de visão.</b>' },
+  { src: 'n22', off: 0.4, dur: 5.52, subs: [[0.25, 2.56, 'Todo voo seguro tem uma coisa em comum:'], [2.66, 5.5, 'alguém que enxerga o todo. <b>Uma torre de controle.</b>']] },
+  { kind: 'beeno', dur: 10.85, subs: [[0.25, 2.24, 'Em vendas, essa torre é o <b>Beeno.</b>'], [2.34, 7.72, 'Cada contato, cada negócio, cada próximo passo… na mesma tela, em tempo real.'], [7.82, 10.83, 'Vendas e marketing olhando para <b>a mesma rota.</b>']] },
+  { src: 'n24', off: 0.3, dur: 2.75, subs: [[0.25, 2.73, '2027 não precisa ser um ano de mais esforço.']] },
+  { src: 'n25', off: 0.4, dur: 2.71, subs: [[0.25, 2.69, 'Precisa ser um ano de <b>mais visão.</b>']] },
+  { src: 's10', off: 1.2, dur: 1.83, subs: [[0.25, 1.81, 'Planeje a rota. Acompanhe cada etapa.']] },
+  { src: 'n23', off: 0.3, dur: 2.71, subs: [[0.25, 2.69, 'E chegue ao <b>destino.</b>']] },
+  { kind: 'end', dur: 6.07, hideSubs: true },
 ];
 let acc = 0; for (const s of SCENES) { s.start = acc; acc += s.dur; }
 window.TOTAL = acc;
