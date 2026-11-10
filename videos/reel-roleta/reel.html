@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Reel Roleta comercial</title>
+<!--
+  Reel "Roleta comercial": automação real do Beeno (print: [Beeno] Etapa Lead · Roleta comercial —
+  gatilho Lead → revezar proprietário da equipe Comercial → atraso 1 min → criar tarefa "Realizar primeiro contato").
+  Dados de exemplo (empresas e pessoas fictícias). 1080x1920, 30 fps, quadro a quadro via seek(t).
+  Render: node videos/reel-roleta/render.js
+-->
+<style>
+@font-face { font-family: "ID"; font-weight: 300; src: url("../../assets/fonts/InterDisplay-Light.otf"); }
+@font-face { font-family: "ID"; font-weight: 500; src: url("../../assets/fonts/InterDisplay-Medium.otf"); }
+@font-face { font-family: "ID"; font-weight: 600; src: url("../../assets/fonts/InterDisplay-SemiBold.otf"); }
+@font-face { font-family: "ID"; font-weight: 700; src: url("../../assets/fonts/InterDisplay-Bold.otf"); }
+@font-face { font-family: "ID"; font-weight: 800; src: url("../../assets/fonts/InterDisplay-ExtraBold.otf"); }
+@font-face { font-family: "P"; font-weight: 400; src: url("../../assets/fonts/Poppins-Regular.ttf"); }
+@font-face { font-family: "P"; font-weight: 500; src: url("../../assets/fonts/Poppins-Medium.ttf"); }
+@font-face { font-family: "P"; font-weight: 600; src: url("../../assets/fonts/Poppins-SemiBold.ttf"); }
+@font-face { font-family: "P"; font-weight: 700; src: url("../../assets/fonts/Poppins-Bold.ttf"); }
+:root { --g:#00CD8A; --g2:#00A973; --ink:#0A1C15; --bg:#0A1712; --muted:#8FA39A; --red:#FF6568; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); }
+body { font-family: "ID", sans-serif; color: #fff; -webkit-font-smoothing: antialiased; }
+#stage { position: absolute; inset: 0; overflow: hidden; background: var(--bg); }
+#glow { position: absolute; width: 1600px; height: 1600px; border-radius: 50%; left: -260px; top: -520px;
+  background: radial-gradient(circle, rgba(0,170,110,.32) 0%, rgba(0,120,80,.10) 42%, rgba(0,0,0,0) 70%); }
+#grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(143,163,154,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(143,163,154,.06) 1px, transparent 1px); background-size: 90px 90px; }
+.L { position: absolute; inset: 0; display: none; }
+.on { display: block; }
+.c { position: absolute; left: 0; right: 0; text-align: center; }
+.kick { font-weight: 600; font-size: 26px; letter-spacing: .3em; color: var(--muted); text-transform: uppercase; }
+
+/* relógio */
+.clock { font-weight: 800; font-size: 300px; letter-spacing: -.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+.clock .sep { opacity: .55; }
+.h1 { font-weight: 300; font-size: 64px; line-height: 1.15; letter-spacing: -.02em; }
+.h1 b { font-weight: 700; color: var(--g); }
+.h1 .r { font-weight: 700; color: var(--red); }
+
+/* card de lead */
+.lead { position: absolute; left: 190px; right: 190px; background: #fff; color: #12241C; border-radius: 22px; padding: 26px 30px;
+  box-shadow: 0 30px 70px rgba(0,0,0,.45); font-family: "P"; display: flex; gap: 20px; align-items: center; }
+.lead .av { width: 70px; height: 70px; border-radius: 50%; background: #7C5CFC; color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 26px; flex: none; }
+.lead b { display: block; font-size: 30px; font-weight: 600; }
+.lead span { font-size: 21px; color: #6B7C74; }
+.lead .tag { margin-left: auto; font-size: 18px; font-weight: 600; padding: 7px 14px; border-radius: 999px; background: #E8F0FE; color: #2563EB; white-space: nowrap; }
+
+/* construtor de automação (estilo real do Beeno) */
+#win { position: absolute; left: 60px; right: 60px; top: 290px; height: 1130px; border-radius: 24px; overflow: hidden; background: #FAFAFA;
+  box-shadow: 0 50px 110px rgba(0,0,0,.55); font-family: "P"; color: #1F2430; transform-origin: 50% 30%; }
+#win .top { height: 64px; background: #000; color: #fff; display: flex; align-items: center; padding: 0 26px; gap: 18px; font-size: 20px; }
+#win .top .sp { flex: 1; }
+#win .top .clk { font-family: "ID"; font-weight: 700; font-size: 26px; color: var(--g); font-variant-numeric: tabular-nums; }
+#win .canvas { position: absolute; left: 0; right: 0; top: 64px; bottom: 0; background-image: radial-gradient(#DADDE3 1.5px, transparent 1.5px); background-size: 28px 28px; }
+#win .ttl { position: absolute; left: 34px; top: 26px; font-size: 24px; font-weight: 500; }
+.node { position: absolute; left: 110px; right: 110px; background: #fff; border: 2px solid #C9CDD4; border-radius: 8px; overflow: hidden; }
+.node .hd { background: #111; color: #fff; font-size: 24px; padding: 12px 20px; display: flex; justify-content: space-between; }
+.node .bd { font-size: 23px; padding: 18px 20px; line-height: 1.45; color: #4A5160; min-height: 70px; }
+.node .bd b { color: #1F2430; }
+.node.lit { border-color: var(--g); box-shadow: 0 0 0 6px rgba(0,205,138,.22), 0 16px 40px rgba(0,120,80,.18); }
+.node .ok { width: 30px; height: 30px; border-radius: 50%; background: var(--g); display: inline-grid; place-items: center; }
+.trig .bd .cond { background: #F1F2F4; border-radius: 6px; padding: 12px 16px; margin-top: 10px; }
+.wire { position: absolute; left: 50%; width: 3px; margin-left: -1.5px; background: #2F3542; transform-origin: top; }
+.pulse { position: absolute; left: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; background: var(--g);
+  box-shadow: 0 0 0 10px rgba(0,205,138,.25), 0 0 40px rgba(0,205,138,.9); }
+/* roleta */
+.reel { display: flex; gap: 18px; align-items: center; }
+.reel .win3 { position: relative; height: 84px; width: 380px; overflow: hidden; border-radius: 12px; background: #F1F2F4; }
+.reel .strip { position: absolute; left: 0; right: 0; top: 0; }
+.reel .it { height: 84px; display: flex; align-items: center; gap: 14px; padding: 0 16px; font-size: 25px; font-weight: 600; color: #1F2430; }
+.reel .it i { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 19px; font-weight: 700; flex: none; }
+/* contagem */
+.ring { position: relative; width: 120px; height: 120px; flex: none; }
+.ring b { position: absolute; inset: 0; display: grid; place-items: center; font-family: "ID"; font-size: 34px; font-weight: 700; color: #1F2430; }
+/* passo (legenda de baixo) */
+#step { position: absolute; left: 70px; right: 70px; top: 1580px; text-align: center; font-size: 50px; line-height: 1.2; font-weight: 300; letter-spacing: -.015em; }
+#step b { font-weight: 700; color: var(--g); }
+#stepn { position: absolute; left: 0; right: 0; top: 1505px; text-align: center; }
+/* notificação */
+#toast { position: absolute; left: 90px; right: 90px; top: 150px; background: rgba(28,32,30,.96); border-radius: 30px; padding: 24px 28px; display: flex; gap: 20px; align-items: center;
+  box-shadow: 0 30px 80px rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.08); }
+#toast .ic { width: 74px; height: 74px; border-radius: 18px; background: var(--g); display: grid; place-items: center; flex: none; }
+#toast b { display: block; font-size: 28px; font-weight: 600; }
+#toast span { font-size: 24px; color: #C9D4CF; }
+#toast small { position: absolute; right: 30px; top: 24px; font-size: 20px; color: var(--muted); }
+/* comparação */
+.cmp { position: absolute; left: 90px; right: 90px; }
+.cmp .lb { font-size: 30px; color: var(--muted); letter-spacing: .2em; font-weight: 600; margin-bottom: 8px; }
+.cmp .v { font-weight: 800; font-size: 210px; letter-spacing: -.04em; line-height: 1; }
+.strike { position: absolute; left: -10px; height: 12px; background: var(--red); top: 50%; transform-origin: left; border-radius: 6px; }
+/* final */
+#logo { position: absolute; left: 50%; width: 560px; margin-left: -280px; top: 640px; }
+.cta { display: inline-block; border: 2px solid var(--g); border-radius: 18px; padding: 22px 38px; font-size: 34px; font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="glow"></div><div id="grid"></div>
+
+  <!-- 1-3: relógio -->
+  <div class="L" id="sClock">
+    <div class="c kick" id="k1" style="top:470px">Segunda-feira</div>
+    <div class="c clock" id="clk" style="top:540px"></div>
+    <div class="c h1" id="t1" style="top:930px"></div>
+    <div class="lead" id="lead1" style="top:1180px"><span class="av">MC</span><div><b>Mariana Costa</b><span>Grupo Atlas · preencheu o formulário</span></div><span class="tag">Novo lead</span></div>
+  </div>
+
+  <!-- 4: o problema -->
+  <div class="L" id="sProb">
+    <div class="c h1" id="p1" style="top:720px;font-size:76px">O problema não é o time.</div>
+    <div class="c h1" id="p2" style="top:840px;font-size:76px"><b>É o caminho até o lead.</b></div>
+    <div class="c h1" id="p3" style="top:1080px;font-size:52px;color:#C9D4CF">Repasse, planilha, “quem pega esse?”</div>
+  </div>
+
+  <!-- 5: automação -->
+  <div class="L" id="sAuto">
+    <div class="c kick" id="ak" style="top:200px">No Beeno, isso é automático</div>
+    <div id="win">
+      <div class="top"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M15 4c-4 0-6 2-6 4.5S11 12 12 12.5 15 15 15 16.5 13 20 9 20" fill="none" stroke="#00CD8A" stroke-width="2.6" stroke-linecap="round"/></svg>
+        <span>Automações</span><span class="sp"></span><span class="clk" id="wclk">09:02</span></div>
+      <div class="canvas">
+        <div class="ttl">[Beeno] Etapa Lead · Roleta comercial</div>
+        <div class="node trig" id="n1" style="top:90px"><div class="hd"><span>$ Negócio · gatilho</span><span class="ok" id="ok1"></span></div>
+          <div class="bd">Inscreva negócios quando:<div class="cond">Etapa do negócio está em <b>Lead</b></div></div></div>
+        <div class="wire" id="w1" style="top:322px;height:50px"></div>
+        <div class="node" id="n2" style="top:372px"><div class="hd"><span>Revezar proprietário</span><span class="ok" id="ok2"></span></div>
+          <div class="bd"><div class="reel"><div class="win3"><div class="strip" id="strip"></div></div><span style="font-size:21px">Equipe <b>Comercial</b></span></div></div></div>
+        <div class="wire" id="w2" style="top:526px;height:50px"></div>
+        <div class="node" id="n3" style="top:576px"><div class="hd"><span>Atraso</span><span class="ok" id="ok3"></span></div>
+          <div class="bd" style="display:flex;align-items:center;gap:24px"><div class="ring"><svg width="120" height="120" viewBox="0 0 120 120" style="transform:rotate(-90deg)"><circle cx="60" cy="60" r="50" fill="none" stroke="#EEF0F2" stroke-width="12"/><circle id="arc" cx="60" cy="60" r="50" fill="none" stroke="#00CD8A" stroke-width="12" stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16"/></svg><b id="secs">60</b></div>
+          <span>Aguardar <b>1 minuto</b></span></div></div>
+        <div class="wire" id="w3" style="top:790px;height:50px"></div>
+        <div class="node" id="n4" style="top:840px"><div class="hd"><span>Criar tarefa</span><span class="ok" id="ok4"></span></div>
+          <div class="bd">Criar <b>Realizar primeiro contato</b> e atribuir ao <b>proprietário do negócio</b></div></div>
+        <div class="pulse" id="pulse"></div>
+      </div>
+    </div>
+    <div class="c" id="stepn"><span class="kick" id="sn" style="color:var(--g)"></span></div>
+    <div id="step"></div>
+    <div id="toast"><span class="ic"><svg width="40" height="40" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="#0A1C15" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <div><b>Nova tarefa · Realizar primeiro contato</b><span>Grupo Atlas · Mariana Costa</span></div><small>agora</small></div>
+  </div>
+
+  <!-- 6: comparação -->
+  <div class="L" id="sCmp">
+    <div class="cmp" id="cA" style="top:520px"><div class="lb">PRIMEIRO CONTATO · ANTES</div><div class="v" style="color:#5E6F68;position:relative;display:inline-block">5h35<div class="strike" id="stk" style="width:calc(100% + 20px)"></div></div></div>
+    <div class="cmp" id="cB" style="top:960px"><div class="lb" style="color:var(--g)">COM A ROLETA DO BEENO</div><div class="v" style="color:var(--g)">1 min</div></div>
+  </div>
+
+  <!-- 7: final -->
+  <div class="L" id="sEnd">
+    <img id="logo" src="../../assets/brand/beeno-logo-dark-bg.svg" alt="beeno">
+    <div class="c h1" id="e1" style="top:960px;font-size:56px">Lead respondido enquanto<br><b>ainda está interessado.</b></div>
+    <div class="c" id="e2" style="top:1240px"><span class="cta">Agende uma demonstração</span><div style="margin-top:20px;font-size:26px;color:var(--muted)">link na bio</div></div>
+  </div>
+</div>
+
+<script>
+const T = { clock: [0, 9.0], prob: [9.0, 11.6], auto: [11.6, 22.0], cmp: [22.0, 25.0], end: [25.0, 28.0] };
+window.TOTAL = 28.0;
+const $ = id => document.getElementById(id);
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => 1 - Math.pow(1 - clamp(x), 3);
+const inout = x => { x = clamp(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const back = x => { x = clamp(x); const c = 1.6; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const ramp = (t, a, d) => ease((t - a) / d);
+function show(el, k, dy = 30, sc = 1) { el.style.opacity = k; el.style.transform = `translateY(${(1 - k) * dy}px) scale(${sc})`; }
+function hide(t, a, d = 0.25) { return 1 - ramp(t, a, d); }
+const pad = n => String(n).padStart(2, '0');
+
+// roleta: lista de vendedores
+const SELL = [['AL', 'Ana Lima', '#F97316'], ['RS', 'Rafael Souza', '#0EA5E9'], ['MC', 'Marcos Cruz', '#7C5CFC'], ['PA', 'Paula Alves', '#E11D48']];
+const strip = $('strip'); const ROWS = 26;
+for (let i = 0; i < ROWS; i++) { const s = SELL[i % 4]; strip.insertAdjacentHTML('beforeend', `<div class="it"><i style="background:${s[2]}">${s[0]}</i>${s[1]}</div>`); }
+
+function sceneClock(t) {
+  // 0-3: 09:02 + lead entra; 3-6: relógio corre até 14:37; 6-9: "5h35 depois"
+  const run = inout((t - 3.0) / 2.4);
+  const m0 = 9 * 60 + 2, m1 = 14 * 60 + 37, m = Math.round(m0 + (m1 - m0) * run);
+  const late = run > 0.98;
+  $('clk').innerHTML = `${pad(Math.floor(m / 60))}<span class="sep">:</span>${pad(m % 60)}`;
+  $('clk').style.color = late ? 'var(--red)' : '#fff';
+  const kz = 1 + 0.04 * Math.sin(Math.min(1, run) * Math.PI);
+  show($('clk'), ramp(t, 0, 0.35), 20, kz);
+  show($('k1'), ramp(t, 0.1, 0.4));
+  const t1 = $('t1');
+  if (t < 3.0) { t1.innerHTML = 'Um lead preenche<br>seu formulário.'; show(t1, ramp(t, 0.35, 0.4) * hide(t, 2.8)); }
+  else if (t < 6.2) { t1.innerHTML = 'O primeiro contato<br>acontece <span class="r">às 14h37.</span>'; show(t1, ramp(t, 3.2, 0.4) * hide(t, 6.0)); }
+  else { t1.innerHTML = '<span class="r">5h35 depois.</span><br>Ele já falou com<br>outro fornecedor.'; show(t1, ramp(t, 6.3, 0.4)); }
+  const lk = ramp(t, 0.8, 0.5) * hide(t, 5.6, 0.4);
+  $('lead1').style.opacity = lk; $('lead1').style.transform = `translateY(${(1 - back((t - 0.8) / 0.6)) * 120}px)`;
+  // leve "chacoalhada" quando o relógio fica vermelho
+  const sh = t > 5.4 && t < 5.8 ? Math.sin(t * 90) * 8 * (1 - (t - 5.4) / 0.4) : 0;
+  $('clk').style.marginLeft = sh + 'px';
+}
+
+function sceneProb(t) {
+  show($('p1'), ramp(t, 0.05, 0.35)); show($('p2'), ramp(t, 0.55, 0.35)); show($('p3'), ramp(t, 1.2, 0.4));
+}
+
+const STEPS = [
+  [0.4, '1', 'O lead entra no funil…'],
+  [2.0, '2', 'a roleta escolhe o vendedor,<br><b>revezando o time</b>…'],
+  [4.6, '3', 'espera <b>1 minuto</b>…'],
+  [6.6, '4', 'e a tarefa já está<br><b>na agenda dele.</b>'],
+];
+function sceneAuto(t) {
+  const w = $('win'); const wk = ramp(t, 0, 0.5);
+  w.style.opacity = wk; w.style.transform = `translateY(${(1 - wk) * 80}px) scale(${0.95 + 0.05 * wk})`;
+  show($('ak'), ramp(t, 0.1, 0.4) * hide(t, 6.8, 0.3));
+  // nós aparecem já montados; acendem em sequência
+  const lit = [[0.4, 2.0], [2.0, 4.6], [4.6, 6.6], [6.6, 10.4]];
+  ['n1', 'n2', 'n3', 'n4'].forEach((id, i) => {
+    const [a, b] = lit[i]; $(id).classList.toggle('lit', t >= a && t < b + 0.4 && i < 3 ? t < b : t >= a);
+    const done = t >= b - 0.15 || (i === 3 && t >= a + 0.6);
+    $('ok' + (i + 1)).innerHTML = done ? '<svg width="20" height="20" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="#0A1C15" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+    $('ok' + (i + 1)).style.opacity = done ? 1 : 0;
+  });
+  // pulso descendo pelos fios
+  const P = [[0.4, 1.6, 200], [1.6, 2.0, 340], [4.2, 4.6, 552], [6.2, 6.6, 816]];
+  let y = 200, vis = 0;
+  if (t >= 0.4 && t < 1.6) { y = 200; vis = 1; }
+  else if (t >= 1.6 && t < 2.0) { y = 322 + 50 * inout((t - 1.6) / 0.4); vis = 1; }
+  else if (t >= 2.0 && t < 4.2) { y = 450; vis = 0; }
+  else if (t >= 4.2 && t < 4.6) { y = 526 + 50 * inout((t - 4.2) / 0.4); vis = 1; }
+  else if (t >= 6.2 && t < 6.6) { y = 790 + 50 * inout((t - 6.2) / 0.4); vis = 1; }
+  $('pulse').style.top = y + 'px'; $('pulse').style.opacity = vis * ramp(t, 0.4, 0.2);
+  // roleta: gira de 2.1 a 4.1 e para em Ana Lima (linha 20 = AL)
+  const r = (() => { const k = clamp((t - 2.1) / 2.0); return 1 - Math.pow(1 - k, 4); })();
+  strip.style.transform = `translateY(${-84 * 20 * r}px)`;
+  strip.style.filter = t > 2.1 && t < 3.6 ? `blur(${2.2 * (1 - r)}px)` : 'none';
+  // contagem 60 → 0 entre 4.7 e 6.4
+  const ck = clamp((t - 4.7) / 1.7);
+  $('secs').textContent = t < 4.7 ? '60' : Math.max(0, Math.ceil(60 * (1 - ck))) + '';
+  $('arc').style.strokeDashoffset = 314.16 * (1 - ck);
+  $('wclk').textContent = ck >= 1 ? '09:03' : '09:02';
+  // legenda dos passos
+  let cur = null; for (const s of STEPS) if (t >= s[0]) cur = s;
+  const step = $('step'), sn = $('sn');
+  if (cur) {
+    const k = ramp(t, cur[0], 0.3);
+    step.innerHTML = cur[2]; show(step, k, 18); sn.textContent = `Passo ${cur[1]} de 4`; show(sn, k, 10);
+  } else { step.style.opacity = 0; sn.style.opacity = 0; }
+  // notificação no "celular do vendedor"
+  const tk = ramp(t, 7.0, 0.5);
+  $('toast').style.opacity = tk; $('toast').style.transform = `translateY(${(1 - back((t - 7.0) / 0.55)) * -260}px)`;
+  // zoom final suave
+  if (t > 7.0) { const z = ramp(t, 7.0, 3.0); w.style.transform = `translateY(${40 * z}px) scale(${1 - 0.04 * z})`; }
+}
+
+function sceneCmp(t) {
+  show($('cA'), ramp(t, 0.05, 0.35));
+  $('stk').style.transform = `scaleX(${inout((t - 0.6) / 0.4)})`;
+  show($('cB'), ramp(t, 1.0, 0.35), 40, 0.9 + 0.1 * back((t - 1.0) / 0.5));
+}
+
+function sceneEnd(t) {
+  const k = ramp(t, 0.05, 0.6); $('logo').style.opacity = k; $('logo').style.transform = `scale(${0.92 + 0.08 * k})`;
+  show($('e1'), ramp(t, 0.6, 0.5)); show($('e2'), ramp(t, 1.2, 0.5));
+}
+
+window.seek = async function (tt) {
+  for (const id of ['sClock', 'sProb', 'sAuto', 'sCmp', 'sEnd']) $(id).classList.remove('on');
+  const pick = (k, id, fn) => { const [a, b] = T[k]; if (tt >= a && tt < b) { $(id).classList.add('on'); fn(tt - a); return true; } };
+  pick('clock', 'sClock', sceneClock) || pick('prob', 'sProb', sceneProb) || pick('auto', 'sAuto', sceneAuto) ||
+    pick('cmp', 'sCmp', sceneCmp) || (($('sEnd').classList.add('on')), sceneEnd(tt - T.end[0]));
+  $('glow').style.transform = `translate(${30 * Math.sin(tt / 3)}px, ${20 * Math.cos(tt / 4)}px)`;
+};
+</script>
+</body>
+</html>
