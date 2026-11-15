@@ -63,6 +63,7 @@ node posts/render.js posts/carrossel-01-produto   # gera png/slide-01.png ... e 
   marketing integrado. As telas são ilustrações com dados fictícios, não prints reais. Legenda em `legenda.md`.
 - `carrossel-02-fim-de-ano/`: "52 dias para fechar o ano" (texto do Vitor), 8 slides. Números e telas de exemplo.
 - `estatico-01-follow-up/`: post estático "Pipeline não esfria de uma vez" (sexta). Tela ilustrativa.
+- `carrossel-03-jornada/`: "Do clique ao contrato: onde o cliente se perde" (9 slides, problema → virada → solução), telas no visual real do Beeno.
 
 Tom dos posts e legendas: sóbrio, de gestor para gestor (o público inclui sócios e diretores). Sem gíria,
 sem piada, sem emojis em excesso; o problema é sempre o processo, nunca a pessoa.
