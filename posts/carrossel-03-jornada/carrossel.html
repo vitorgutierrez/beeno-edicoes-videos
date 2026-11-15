@@ -184,6 +184,7 @@ body { background: #222; font-family: "ID", sans-serif; color: #fff; -webkit-fon
   <symbol id="i-alert" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></g></symbol>
   <symbol id="i-q" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.5V14M12 17h.01"/></g></symbol>
   <symbol id="i-sheet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></g></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M20 11.5a8 8 0 0 1-11.8 7L4 20l1.4-4A8 8 0 1 1 20 11.5z"/></symbol>
   <symbol id="i-chart" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></g></symbol>
 </defs></svg>
 
@@ -202,6 +203,8 @@ body { background: #222; font-family: "ID", sans-serif; color: #fff; -webkit-fon
 .cold .row .sp { flex: 1; }
 .cold .muted { color: #8FA39A; font-size: 20px; }
 .redchip { font-size: 18px; font-weight: 600; padding: 6px 14px; border-radius: 999px; background: rgba(255,101,104,.15); color: #FF8A8C; white-space: nowrap; }
+.wachip { font-size: 18px; font-weight: 600; padding: 6px 14px; border-radius: 999px; background: rgba(37,211,102,.14); color: #6EE7A0; white-space: nowrap; }
+.msg { font-style: italic; color: #C9D4CF; }
 .greychip { font-size: 18px; font-weight: 600; padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,.08); color: #B8C4BF; white-space: nowrap; }
 /* janela no visual real do Beeno */
 .bw { position: absolute; background: #FAFAFA; border-radius: 22px; overflow: hidden; color: #1F2430; font-family: "ID";
@@ -251,12 +254,12 @@ body { background: #222; font-family: "ID", sans-serif; color: #fff; -webkit-fon
   <div style="left:80px; top:180px; width:920px;">
     <div class="tagp r" style="margin-bottom:26px"><span class="num">1</span>Ponto de quebra</div>
     <div class="h2">O lead chega.<br><span class="r">E fica sem dono.</span></div>
-    <p class="pb" style="margin-top:26px">Cai no e-mail do marketing, vira linha de planilha, espera alguém repassar. <b>Cada hora parado é interesse esfriando.</b></p>
+    <p class="pb" style="margin-top:26px">Chega pelo WhatsApp, pelo site, pelo e-mail. Vira mensagem não lida ou linha de planilha, esperando alguém repassar. <b>Cada hora parado é interesse esfriando.</b></p>
   </div>
   <div class="cold" style="left:80px; top:640px; width:920px;">
-    <div class="row"><svg class="ico" color="#8FA39A"><use href="#i-sheet"/></svg><span>leads_novembro_v3.xlsx</span><span class="sp"></span><span class="muted">editado por 4 pessoas</span></div>
-    <div class="row"><span>Grupo Atlas · Mariana Costa</span><span class="sp"></span><span class="redchip">sem responsável · há 5h</span></div>
-    <div class="row"><span>Nobre Logística · Rafael Lima</span><span class="sp"></span><span class="redchip">sem responsável · há 1 dia</span></div>
+    <div class="row"><svg class="ico" color="#6EE7A0"><use href="#i-chat"/></svg><span>WhatsApp do comercial</span><span class="sp"></span><span class="muted">14 conversas não lidas</span></div>
+    <div class="row"><span>Mariana Costa: <span class="msg">“Oi! Queria entender os planos”</span></span><span class="sp"></span><span class="redchip">sem resposta · há 5h</span></div>
+    <div class="row"><svg class="ico" color="#8FA39A"><use href="#i-sheet"/></svg><span>leads_site_novembro.xlsx</span><span class="sp"></span><span class="redchip">23 sem responsável</span></div>
     <div class="row"><span>Vértice Saúde · Ana Prado</span><span class="sp"></span><span class="greychip">“quem pega esse?”</span></div>
   </div>
   <div class="foot"><span><b>beeno</b>.ai</span><span>Onde o cliente se perde · 2/9</span></div>
@@ -269,13 +272,13 @@ body { background: #222; font-family: "ID", sans-serif; color: #fff; -webkit-fon
   <div style="left:80px; top:180px; width:920px;">
     <div class="tagp r" style="margin-bottom:26px"><span class="num">2</span>Ponto de quebra</div>
     <div class="h2">O vendedor liga<br><span class="r">sem contexto.</span></div>
-    <p class="pb" style="margin-top:26px">Não sabe qual página o lead viu, que e-mail abriu, o que já falou com o marketing. <b>Começa do zero, e o cliente percebe.</b></p>
+    <p class="pb" style="margin-top:26px">Não sabe o que o cliente já conversou no WhatsApp, qual página viu, que e-mail abriu. <b>Pergunta tudo de novo, e o cliente percebe.</b></p>
   </div>
   <div class="cold" style="left:80px; top:640px; width:920px;">
     <div class="row"><span style="font-weight:600">Mariana Costa · Grupo Atlas</span><span class="sp"></span><span class="greychip">ficha no CRM</span></div>
-    <div class="row"><svg class="ico" color="#FF8A8C"><use href="#i-q"/></svg><span>Página que visitou</span><span class="sp"></span><span class="muted">está na ferramenta de LP</span></div>
-    <div class="row"><svg class="ico" color="#FF8A8C"><use href="#i-q"/></svg><span>E-mails que abriu</span><span class="sp"></span><span class="muted">está no e-mail marketing</span></div>
-    <div class="row"><svg class="ico" color="#FF8A8C"><use href="#i-q"/></svg><span>Última conversa</span><span class="sp"></span><span class="muted">está no celular de alguém</span></div>
+    <div class="row"><svg class="ico" color="#FF8A8C"><use href="#i-q"/></svg><span>Conversas no WhatsApp</span><span class="sp"></span><span class="muted">no celular de outro vendedor</span></div>
+    <div class="row"><svg class="ico" color="#FF8A8C"><use href="#i-q"/></svg><span>Página que visitou</span><span class="sp"></span><span class="muted">na ferramenta de landing page</span></div>
+    <div class="row"><svg class="ico" color="#FF8A8C"><use href="#i-q"/></svg><span>E-mails que abriu</span><span class="sp"></span><span class="muted">no e-mail marketing</span></div>
   </div>
   <div class="foot"><span><b>beeno</b>.ai</span><span>Onde o cliente se perde · 3/9</span></div>
 </section>
@@ -292,7 +295,7 @@ body { background: #222; font-family: "ID", sans-serif; color: #fff; -webkit-fon
   <div class="cold" style="left:80px; top:640px; width:920px;">
     <div class="row"><span>Retorno · Grupo Atlas</span><span class="sp"></span><span class="greychip"><s style="opacity:.6">sex</s> → seg</span></div>
     <div class="row"><span>Proposta · Nobre Logística</span><span class="sp"></span><span class="redchip">sem próximo passo</span></div>
-    <div class="row"><span>Reunião · Vértice Saúde</span><span class="sp"></span><span class="greychip"><s style="opacity:.6">seg</s> → qua</span></div>
+    <div class="row"><span>WhatsApp · Vértice Saúde: <span class="msg">“Conseguem me mandar a proposta?”</span></span><span class="sp"></span><span class="redchip">sem resposta · 2 dias</span></div>
     <div class="row"><svg class="ico" color="#8FA39A"><use href="#i-chart"/></svg><span>Relatório da semana</span><span class="sp"></span><span class="muted">montado à mão, sexta à noite</span></div>
   </div>
   <div class="foot"><span><b>beeno</b>.ai</span><span>Onde o cliente se perde · 4/9</span></div>
@@ -304,8 +307,8 @@ body { background: #222; font-family: "ID", sans-serif; color: #fff; -webkit-fon
   <div class="dash"></div>
   <div style="left:80px; top:400px; width:920px;">
     <div style="width:96px; height:6px; background:var(--green); border-radius:3px; margin-bottom:44px"></div>
-    <div class="h1" style="font-size:78px; line-height:1.14"><span class="light">O problema não é o seu time.</span><br>É a jornada quebrada em <span class="hl">ferramentas</span> <span class="hl">e planilhas.</span></div>
-    <p class="pb" style="margin-top:44px">Resolver isso é o trabalho de um CRM. <b>Veja como fica no Beeno →</b></p>
+    <div class="h1" style="font-size:74px; line-height:1.14"><span class="light">O problema não é o seu time.</span><br>É a jornada quebrada em <span class="hl">conversas soltas,</span> <span class="hl">ferramentas</span> <span class="hl">e planilhas.</span></div>
+    <p class="pb" style="margin-top:44px">Resolver isso é o trabalho de um <b>CRM conversacional</b>: a conversa e o funil no mesmo lugar. <b>Veja como fica no Beeno →</b></p>
   </div>
   <div class="foot"><span><b>beeno</b>.ai</span><span>Onde o cliente se perde · 5/9</span></div>
 </section>
@@ -317,13 +320,13 @@ body { background: #222; font-family: "ID", sans-serif; color: #fff; -webkit-fon
   <div style="left:80px; top:180px; width:920px;">
     <div class="solves" style="margin-bottom:24px"><span class="num g">1</span>Resolve o ponto 1 · <s>lead sem dono</s></div>
     <div class="h2">Lead chegou:<br><span class="g">dono e tarefa em 1 minuto.</span></div>
-    <p class="pb" style="margin-top:22px">A landing page entra direto no funil e a <b>roleta comercial</b> distribui entre o time.</p>
+    <p class="pb" style="margin-top:22px">Chegou pelo WhatsApp ou pela landing page, entra direto no funil, e a <b>roleta comercial</b> distribui entre o time.</p>
   </div>
   <div class="bw" style="left:80px; top:590px; width:920px;">
     <div class="top"><span style="color:#00CD8A;font-weight:700">b</span><span>Automações</span><span class="sp"></span><span>Comercial ▾</span></div>
     <div class="canvas">
       <div style="font-size:19px;margin:0 0 14px 4px">[Beeno] Etapa Lead · Roleta comercial</div>
-      <div class="nd lit"><div class="hd"><span>$ Negócio · gatilho</span><span>✓</span></div><div class="bd">Entrou na etapa <b>Lead</b> (via landing page)</div></div>
+      <div class="nd lit"><div class="hd"><span>$ Negócio · gatilho</span><span>✓</span></div><div class="bd">Entrou na etapa <b>Lead</b> (WhatsApp ou landing page)</div></div>
       <div class="wr"></div>
       <div class="nd lit"><div class="hd"><span>Revezar proprietário</span><span>✓</span></div><div class="bd">Equipe <b>Comercial</b> → <b>Ana Lima</b></div></div>
       <div class="wr"></div>
@@ -341,14 +344,15 @@ body { background: #222; font-family: "ID", sans-serif; color: #fff; -webkit-fon
   <div class="dash"></div>
   <div style="left:80px; top:180px; width:920px;">
     <div class="solves" style="margin-bottom:24px"><span class="num g">2</span>Resolve o ponto 2 · <s>vendedor sem contexto</s></div>
-    <div class="h2">Uma ficha,<br><span class="g">a história inteira.</span></div>
-    <p class="pb" style="margin-top:22px">Página, e-mail, ligação e etapa do funil no mesmo histórico. <b>O vendedor já liga sabendo.</b></p>
+    <div class="h2">Uma ficha,<br><span class="g">a conversa inteira.</span></div>
+    <p class="pb" style="margin-top:22px">WhatsApp, página, e-mail e ligação no mesmo histórico. <b>Quem atende já chega sabendo.</b></p>
   </div>
   <div class="bw" style="left:80px; top:620px; width:920px;">
     <div class="top"><span style="color:#00CD8A;font-weight:700">b</span><span>Contatos</span><span class="sp"></span><span>Comercial ▾</span></div>
     <div style="padding:20px 30px 10px; background:#fff">
       <div style="display:flex;align-items:center;gap:18px;padding-bottom:14px;border-bottom:1px solid #EEF0F2"><span style="width:62px;height:62px;border-radius:50%;background:#7C5CFC;color:#fff;display:grid;place-items:center;font-weight:700;font-size:22px">MC</span><div><b style="font-size:26px;display:block">Mariana Costa</b><span style="font-size:18px;color:#6B7C74">Diretora comercial · Grupo Atlas</span></div><span class="evx" style="margin-left:auto;border:0;padding:0"><span class="mod">Proposta · R$ 48.000</span></span></div>
       <div class="evx"><span class="dot" style="background:#E8F0FE;color:#2563EB"><svg class="ico"><use href="#i-globe"/></svg></span><div><b>Landing page “Demonstração”</b><span>formulário enviado · seg 09:02</span></div><span class="mod">Landing page</span></div>
+      <div class="evx"><span class="dot" style="background:#E3F8EC;color:#128C4A"><svg class="ico"><use href="#i-chat"/></svg></span><div><b>“Oi! Queria entender os planos”</b><span>conversa no WhatsApp · seg 09:10</span></div><span class="mod" style="background:#E3F8EC;color:#128C4A">WhatsApp</span></div>
       <div class="evx"><span class="dot" style="background:#FEF3DC;color:#B7791F"><svg class="ico"><use href="#i-mail"/></svg></span><div><b>Abriu “Como funciona” 3 vezes</b><span>clicou em planos · ter 18:40</span></div><span class="mod">E-mail marketing</span></div>
       <div class="evx"><span class="dot" style="background:#E6FAF3;color:#00A973"><svg class="ico"><use href="#i-phone"/></svg></span><div><b>Ligação de 6 min · gravada</b><span>Ana Lima · qua 10:02</span></div><span class="mod">Ligações</span></div>
     </div>
@@ -363,7 +367,7 @@ body { background: #222; font-family: "ID", sans-serif; color: #fff; -webkit-fon
   <div style="left:80px; top:180px; width:920px;">
     <div class="solves" style="margin-bottom:24px"><span class="num g">3</span>Resolve o ponto 3 · <s>follow-up na memória</s></div>
     <div class="h2">Próximo passo automático.<br><span class="g">Gestão em tempo real.</span></div>
-    <p class="pb" style="margin-top:22px">Cadências de e-mail e ligação puxam o follow-up. <b>O gestor vê o funil sem pedir relatório.</b></p>
+    <p class="pb" style="margin-top:22px">Cadências puxam o follow-up, nenhuma conversa fica sem dono. <b>O gestor vê o funil sem pedir relatório.</b></p>
   </div>
   <div class="bw" style="left:80px; top:700px; width:560px;">
     <div class="top"><span style="color:#00CD8A;font-weight:700">b</span><span>Cadência</span></div>
@@ -390,7 +394,7 @@ body { background: #222; font-family: "ID", sans-serif; color: #fff; -webkit-fon
   <svg class="bmark" style="right:-110px; bottom:-60px; width:620px; height:790px"><use href="#b"/></svg>
   <div style="left:80px; top:360px; width:920px;">
     <div class="h1" style="font-size:80px"><span class="light">Do primeiro clique ao contrato assinado,</span><br><span class="hl">sem perder o cliente</span><br><span class="hl">no caminho.</span></div>
-    <p class="body" style="margin-top:40px; width:840px">Funil, e-mail marketing, landing pages, cadências e ligações <b>na mesma plataforma.</b></p>
+    <p class="body" style="margin-top:40px; width:860px"><b>Beeno, o CRM conversacional.</b> WhatsApp, funil, e-mail marketing, landing pages, cadências e ligações na mesma plataforma.</p>
   </div>
   <div style="left:80px; top:1010px;">
     <span style="display:inline-flex; align-items:center; gap:16px; background:var(--green); color:var(--ink); font-weight:700; font-size:30px; border-radius:18px; padding:24px 34px;">
